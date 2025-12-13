@@ -78,13 +78,14 @@ union {{
             height: Image height in pixels
             padding_percent: Padding around plant as percentage of size
         """
-        self.output_dir = output_dir
+        # Convert to absolute path for Windows compatibility
+        self.output_dir = os.path.abspath(output_dir)
         self.width = width
         self.height = height
         self.padding_percent = padding_percent
         
         # Ensure output directory exists
-        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
     
     def _segment_to_povray(
         self,

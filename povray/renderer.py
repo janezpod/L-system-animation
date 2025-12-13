@@ -40,7 +40,7 @@ class POVRayRenderer:
             quality: POV-Ray quality setting (0-11)
             max_workers: Maximum parallel render processes
         """
-        self.output_dir = output_dir
+        self.output_dir = os.path.abspath(output_dir)
         self.width = width
         self.height = height
         self.antialias = antialias
@@ -48,7 +48,7 @@ class POVRayRenderer:
         self.max_workers = max_workers
         
         # Ensure output directory exists
-        os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(self.output_dir, exist_ok=True)
         
         # Find POV-Ray executable
         self.povray_path = self._find_povray()
@@ -83,6 +83,10 @@ class POVRayRenderer:
         
         raise POVRayError(
             "POV-Ray not found. Please install POV-Ray and ensure it's in your PATH.\n"
+            "Installation instructions:\n"
+            "  - Linux: sudo apt install povray\n"
+            "  - macOS: brew install povray\n"
+            "  - Windows: Download from http://www.povray.org/download/"
         )
     
     def _build_command(self, input_file: str, output_file: str) -> List[str]:
