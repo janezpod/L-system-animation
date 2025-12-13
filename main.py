@@ -42,7 +42,7 @@ def create_gif(
     loop: int = 0
 ) -> bool:
     """
-    Create GIF from PNG frames using ImageMagick.
+    Create GIF from PNG frames using Pillow.
     
     Args:
         frame_dir: Directory containing frame_*.png files
@@ -53,39 +53,65 @@ def create_gif(
     Returns:
         True if successful
     """
-    # Calculate delay (in 1/100ths of a second)
-    delay = int(100 / fps)
-    
-    # Find ImageMagick
-    magick = shutil.which("magick") or shutil.which("convert")
-    
-    if not magick:
-        print("\nWarning: ImageMagick not found.")
-        print("To create GIF manually, run:")
-        print(f"  magick -delay {delay} -loop {loop} {frame_dir}/frame_*.png {output_file}")
-        print("Or with older ImageMagick:")
-        print(f"  convert -delay {delay} -loop {loop} {frame_dir}/frame_*.png {output_file}")
-        return False
-    
-    # Build command
-    frame_pattern = os.path.join(frame_dir, "frame_*.png")
-    
-    # Check which ImageMagick version
-    if "magick" in magick:
-        cmd = [magick, "-delay", str(delay), "-loop", str(loop), frame_pattern, output_file]
-    else:
-        cmd = [magick, "-delay", str(delay), "-loop", str(loop), frame_pattern, output_file]
-    
-    print(f"\nCreating GIF with {fps} FPS...")
+    import glob
     
     try:
-        # Use shell=True for glob pattern
-        shell_cmd = f'"{magick}" -delay {delay} -loop {loop} "{frame_dir}"/frame_*.png "{output_file}"'
-        result = subprocess.run(shell_cmd, shell=True, capture_output=True, text=True)
+        from PIL import Image
+    except ImportError:
+        print("\nError: Pillow not installed.")
+        print("Install it with: pip install Pillow")
+        return False
+    
+    # Get list of frame files
+    frame_dir = os.path.abspath(frame_dir)
+    output_file = os.path.abspath(output_file)
+    frame_pattern = os.path.join(frame_dir, "frame_*.png")
+    frame_files = sorted(glob.glob(frame_pattern))
+    
+    if not frame_files:
+        print(f"No frame files found matching: {frame_pattern}")
+        return False
+    
+    print(f"\nCreating GIF with {fps} FPS from {len(frame_files)} frames...")
+    
+    try:
+        # Load all frames
+        frames = []
+        for i, f in enumerate(frame_files):
+            img = Image.open(f)
+            # Convert to RGBA then to palette for GIF
+            img = img.convert('RGBA')
+            # Create a white background
+            background = Image.new('RGBA', img.size, (255, 255, 255, 255))
+            # Composite the image onto white background
+            composite = Image.alpha_composite(background, img)
+            # Convert to palette mode
+            composite = composite.convert('P', palette=Image.ADAPTIVE, colors=256)
+            frames.append(composite)
+            
+            # Progress indicator
+            if (i + 1) % 10 == 0 or i == len(frame_files) - 1:
+                print(f"\r  Loading frames: {i + 1}/{len(frame_files)}", end="", flush=True)
         
-        if result.returncode != 0:
-            print(f"ImageMagick error: {result.stderr}")
+        print()  # New line after progress
+        
+        if not frames:
+            print("No frames loaded")
             return False
+        
+        # Calculate duration in milliseconds
+        duration = int(1000 / fps)
+        
+        # Save as GIF
+        print("  Saving GIF...")
+        frames[0].save(
+            output_file,
+            save_all=True,
+            append_images=frames[1:],
+            duration=duration,
+            loop=loop,
+            optimize=False
+        )
         
         if os.path.exists(output_file):
             size_mb = os.path.getsize(output_file) / (1024 * 1024)
@@ -97,6 +123,8 @@ def create_gif(
             
     except Exception as e:
         print(f"Error creating GIF: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
