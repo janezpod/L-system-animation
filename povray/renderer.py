@@ -157,23 +157,42 @@ class POVRayRenderer:
         
         try:
             if platform.system() == 'Windows':
-                # Windows: Start POV-Ray, wait for output file, then kill process
+                # Windows: Start POV-Ray, wait for output file to be fully written, then kill process
                 process = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE
                 )
                 
-                # Wait for output file to appear (check every 0.2 seconds)
-                max_wait = 120  # 2 minutes max
+                # Wait for output file to appear
+                max_wait = 300  # 5 minutes max
                 waited = 0
                 while waited < max_wait:
                     time.sleep(0.2)
                     waited += 0.2
                     if os.path.exists(output_file):
-                        # File exists, wait a tiny bit more to ensure it's fully written
-                        time.sleep(0.3)
                         break
+                
+                if not os.path.exists(output_file):
+                    process.terminate()
+                    return False, f"Output file not created after {max_wait}s"
+                
+                # Wait for file size to stabilize (file fully written)
+                # Check that size doesn't change for 1 second
+                last_size = -1
+                stable_count = 0
+                while stable_count < 5 and waited < max_wait:  # Need 5 consecutive stable checks (1 second)
+                    time.sleep(0.2)
+                    waited += 0.2
+                    try:
+                        current_size = os.path.getsize(output_file)
+                        if current_size == last_size and current_size > 0:
+                            stable_count += 1
+                        else:
+                            stable_count = 0
+                            last_size = current_size
+                    except:
+                        stable_count = 0
                 
                 # Kill POV-Ray process
                 try:
