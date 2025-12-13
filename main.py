@@ -77,17 +77,24 @@ def create_gif(
     try:
         # Load all frames
         frames = []
+        skipped = 0
         for i, f in enumerate(frame_files):
-            img = Image.open(f)
-            # Convert to RGBA then to palette for GIF
-            img = img.convert('RGBA')
-            # Create a white background
-            background = Image.new('RGBA', img.size, (255, 255, 255, 255))
-            # Composite the image onto white background
-            composite = Image.alpha_composite(background, img)
-            # Convert to palette mode
-            composite = composite.convert('P', palette=Image.ADAPTIVE, colors=256)
-            frames.append(composite)
+            try:
+                img = Image.open(f)
+                img.load()  # Force load to catch truncated files early
+                # Convert to RGBA then to palette for GIF
+                img = img.convert('RGBA')
+                # Create a white background
+                background = Image.new('RGBA', img.size, (255, 255, 255, 255))
+                # Composite the image onto white background
+                composite = Image.alpha_composite(background, img)
+                # Convert to palette mode
+                composite = composite.convert('P', palette=Image.ADAPTIVE, colors=256)
+                frames.append(composite)
+            except Exception as e:
+                print(f"\n  Warning: Skipping corrupted frame {os.path.basename(f)}: {e}")
+                skipped += 1
+                continue
             
             # Progress indicator
             if (i + 1) % 10 == 0 or i == len(frame_files) - 1:
@@ -95,8 +102,15 @@ def create_gif(
         
         print()  # New line after progress
         
+        if skipped > 0:
+            print(f"  Skipped {skipped} corrupted frames")
+        
         if not frames:
-            print("No frames loaded")
+            print("No valid frames loaded")
+            return False
+        
+        if len(frames) < 2:
+            print("Need at least 2 frames for animation")
             return False
         
         # Calculate duration in milliseconds
@@ -328,10 +342,9 @@ Available presets: """ + ", ".join(list_presets())
                     print(f"    {os.path.basename(f)}: {m}")
     
     # Step 5: Create GIF
-    if args.skip_render or args.skip_gif:
+    if args.skip_gif:
         print(f"\n[5/5] Skipping GIF creation")
-        if not args.skip_render:
-            print(f"  Frames in: {frames_dir}")
+        print(f"  Frames in: {frames_dir}")
     else:
         print(f"\n[5/5] Assembling GIF...")
         
@@ -352,7 +365,7 @@ Available presets: """ + ", ".join(list_presets())
     print(f"\n{'='*50}")
     print(f"Complete! Total time: {elapsed:.1f} seconds")
     
-    if not args.skip_render and not args.skip_gif:
+    if not args.skip_gif:
         gif_path = args.output if os.path.isabs(args.output) else os.path.join(output_dir, args.output)
         if os.path.exists(gif_path):
             print(f"Output: {gif_path}")
