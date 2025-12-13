@@ -96,6 +96,8 @@ class POVRayRenderer:
         Returns:
             Command as list of arguments
         """
+        import platform
+        
         cmd = [
             self.povray_path,
             f'+I{input_file}',
@@ -108,6 +110,12 @@ class POVRayRenderer:
             '-D',  # No display
             '+UA',  # Transparent background (alpha channel)
         ]
+        
+        # Windows-specific: auto-close after render
+        if platform.system() == 'Windows':
+            cmd.insert(1, '/RENDER')  # Start rendering immediately
+            cmd.insert(2, '/EXIT')    # Exit when done
+        
         return cmd
     
     def render_file(self, pov_file: str, output_file: Optional[str] = None) -> Tuple[bool, str]:
