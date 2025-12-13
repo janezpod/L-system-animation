@@ -166,10 +166,10 @@ Available presets: """ + ", ".join(list_presets())
     parser.add_argument("--axiom", "-a", help="Starting string (axiom)")
     parser.add_argument("--rules", "-r", 
                        help="Production rules as 'A:replacement,B:replacement'")
-    parser.add_argument("--angle", "-d", type=float, default=25,
-                       help="Turning angle in degrees (default: 25)")
-    parser.add_argument("--iterations", "-i", type=int, default=5,
-                       help="Number of L-system iterations (default: 5)")
+    parser.add_argument("--angle", "-d", type=float, default=None,
+                       help="Turning angle in degrees (default: 25, or preset value)")
+    parser.add_argument("--iterations", "-i", type=int, default=None,
+                       help="Number of L-system iterations (default: 5, or preset value)")
     
     # Animation parameters
     parser.add_argument("--frames", "-f", type=int, default=100,
@@ -239,14 +239,19 @@ Available presets: """ + ", ".join(list_presets())
         preset = get_preset(args.preset)
         axiom = preset['axiom']
         rules = preset['rules']
-        angle = preset['angle']
-        iterations = preset['iterations']
+        # Use CLI args if provided, otherwise use preset values
+        angle = args.angle if args.angle is not None else preset['angle']
+        iterations = args.iterations if args.iterations is not None else preset['iterations']
         print(f"Using preset: {args.preset}")
+        if args.iterations is not None:
+            print(f"  (overriding iterations: {iterations})")
+        if args.angle is not None:
+            print(f"  (overriding angle: {angle})")
     elif args.axiom and args.rules:
         axiom = args.axiom
         rules = parse_rules(args.rules)
-        angle = args.angle
-        iterations = args.iterations
+        angle = args.angle if args.angle is not None else 25
+        iterations = args.iterations if args.iterations is not None else 5
         print(f"Using custom L-system: {axiom} with rules {rules}")
     else:
         parser.error("Either --preset or both --axiom and --rules are required")
@@ -255,6 +260,18 @@ Available presets: """ + ", ".join(list_presets())
     output_dir = args.output_dir
     pov_dir = os.path.join(output_dir, "pov")
     frames_dir = os.path.join(output_dir, "frames")
+    
+    # Clear old files to avoid mixing with previous runs
+    if not args.skip_render:
+        if os.path.exists(pov_dir):
+            for f in os.listdir(pov_dir):
+                if f.endswith('.pov'):
+                    os.remove(os.path.join(pov_dir, f))
+        if os.path.exists(frames_dir):
+            for f in os.listdir(frames_dir):
+                if f.endswith('.png'):
+                    os.remove(os.path.join(frames_dir, f))
+    
     os.makedirs(pov_dir, exist_ok=True)
     os.makedirs(frames_dir, exist_ok=True)
     
