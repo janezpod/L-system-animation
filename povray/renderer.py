@@ -102,23 +102,36 @@ class POVRayRenderer:
         """
         import platform
         
-        cmd = [
-            self.povray_path,
-            f'+I{input_file}',
-            f'+O{output_file}',
-            f'+W{self.width}',
-            f'+H{self.height}',
-            '+FN',  # PNG output
-            f'+A{self.antialias}',  # Anti-aliasing
-            f'+Q{self.quality}',  # Quality
-            '-D',  # No display
-            '+UA',  # Transparent background (alpha channel)
-        ]
-        
-        # Windows-specific: auto-close after render
         if platform.system() == 'Windows':
-            cmd.insert(1, '/RENDER')  # Start rendering immediately
-            cmd.insert(2, '/EXIT')    # Exit when done
+            # Windows GUI version needs special handling
+            cmd = [
+                self.povray_path,
+                '/NR',  # No restore - don't restore previous window state
+                '/RENDER',  # Start rendering immediately  
+                '/EXIT',    # Exit when done
+                f'{input_file}',  # Input file (no +I prefix for Windows)
+                f'+O{output_file}',
+                f'+W{self.width}',
+                f'+H{self.height}',
+                '+FN',  # PNG output
+                f'+A{self.antialias}',  # Anti-aliasing
+                f'+Q{self.quality}',  # Quality
+                '-D',  # No display preview
+                '+UA',  # Transparent background
+            ]
+        else:
+            cmd = [
+                self.povray_path,
+                f'+I{input_file}',
+                f'+O{output_file}',
+                f'+W{self.width}',
+                f'+H{self.height}',
+                '+FN',
+                f'+A{self.antialias}',
+                f'+Q{self.quality}',
+                '-D',
+                '+UA',
+            ]
         
         return cmd
     
@@ -133,6 +146,9 @@ class POVRayRenderer:
         Returns:
             Tuple of (success: bool, message: str)
         """
+        import platform
+        import time
+        
         if output_file is None:
             basename = os.path.splitext(os.path.basename(pov_file))[0]
             output_file = os.path.join(self.output_dir, f"{basename}.png")
@@ -140,20 +156,55 @@ class POVRayRenderer:
         cmd = self._build_command(pov_file, output_file)
         
         try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120  # 2 minute timeout per frame
-            )
-            
-            if result.returncode != 0:
-                return False, f"POV-Ray error: {result.stderr}"
-            
-            if not os.path.exists(output_file):
-                return False, f"Output file not created: {output_file}"
-            
-            return True, output_file
+            if platform.system() == 'Windows':
+                # Windows: Start POV-Ray, wait for output file, then kill process
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+                
+                # Wait for output file to appear (check every 0.2 seconds)
+                max_wait = 120  # 2 minutes max
+                waited = 0
+                while waited < max_wait:
+                    time.sleep(0.2)
+                    waited += 0.2
+                    if os.path.exists(output_file):
+                        # File exists, wait a tiny bit more to ensure it's fully written
+                        time.sleep(0.3)
+                        break
+                
+                # Kill POV-Ray process
+                try:
+                    process.terminate()
+                    process.wait(timeout=2)
+                except:
+                    try:
+                        process.kill()
+                    except:
+                        pass
+                
+                if not os.path.exists(output_file):
+                    return False, f"Output file not created after {max_wait}s: {output_file}"
+                
+                return True, output_file
+            else:
+                # Linux/Mac: Normal execution
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+                
+                if result.returncode != 0:
+                    return False, f"POV-Ray error: {result.stderr}"
+                
+                if not os.path.exists(output_file):
+                    return False, f"Output file not created: {output_file}"
+                
+                return True, output_file
             
         except subprocess.TimeoutExpired:
             return False, f"Render timeout for {pov_file}"
