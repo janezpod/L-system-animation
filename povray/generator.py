@@ -67,7 +67,7 @@ union {{
         output_dir: str = "output/pov",
         width: int = 800,
         height: int = 600,
-        padding_percent: float = 0.1
+        padding_percent: float = 0.05
     ):
         """
         Initialize POV-Ray generator.

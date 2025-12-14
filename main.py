@@ -39,7 +39,8 @@ def create_gif(
     frame_dir: str,
     output_file: str,
     fps: int = 15,
-    loop: int = 0
+    loop: int = 0,
+    hold_frames: int = 15
 ) -> bool:
     """
     Create GIF from PNG frames using Pillow.
@@ -49,6 +50,7 @@ def create_gif(
         output_file: Output GIF filename
         fps: Frames per second
         loop: Loop count (0 = infinite)
+        hold_frames: Number of times to repeat final frame
         
     Returns:
         True if successful
@@ -72,7 +74,7 @@ def create_gif(
         print(f"No frame files found matching: {frame_pattern}")
         return False
     
-    print(f"\nCreating GIF with {fps} FPS from {len(frame_files)} frames...")
+    print(f"\nCreating GIF with {fps} FPS from {len(frame_files)} frames + {hold_frames} hold frames...")
     
     try:
         # Load all frames
@@ -113,11 +115,17 @@ def create_gif(
             print("Need at least 2 frames for animation")
             return False
         
+        # Add hold frames at the end (duplicate final frame)
+        if hold_frames > 0 and frames:
+            final_frame = frames[-1]
+            for _ in range(hold_frames):
+                frames.append(final_frame)
+        
         # Calculate duration in milliseconds
         duration = int(1000 / fps)
         
         # Save as GIF
-        print("  Saving GIF...")
+        print(f"  Saving GIF ({len(frames)} total frames)...")
         frames[0].save(
             output_file,
             save_all=True,
@@ -176,6 +184,10 @@ Available presets: """ + ", ".join(list_presets())
                        help="Total animation frames (default: 100)")
     parser.add_argument("--fps", type=int, default=15,
                        help="Frames per second for GIF (default: 15)")
+    parser.add_argument("--hold-frames", type=int, default=15,
+                       help="Frames to hold at end before looping (default: 15)")
+    parser.add_argument("--padding", type=float, default=0.05,
+                       help="Padding around plant as fraction (default: 0.05)")
     
     # Output parameters
     parser.add_argument("--width", "-W", type=int, default=800,
@@ -314,7 +326,8 @@ Available presets: """ + ", ".join(list_presets())
     generator = POVRayGenerator(
         output_dir=pov_dir,
         width=args.width,
-        height=args.height
+        height=args.height,
+        padding_percent=args.padding
     )
     
     controller = AnimationController(total_frames=args.frames)
@@ -369,7 +382,7 @@ Available presets: """ + ", ".join(list_presets())
         if not os.path.isabs(gif_path):
             gif_path = os.path.join(output_dir, gif_path)
         
-        success = create_gif(frames_dir, gif_path, fps=args.fps)
+        success = create_gif(frames_dir, gif_path, fps=args.fps, hold_frames=args.hold_frames)
         
         if success and not args.keep_frames:
             # Clean up intermediate files
