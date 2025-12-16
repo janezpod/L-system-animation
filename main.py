@@ -210,7 +210,7 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
     turtle_group.add_argument("--length-decay", type=float, default=0.9,
                              help="Length multiplier per depth (default: 0.9)")
     turtle_group.add_argument("--stochastic", type=float, default=0.0,
-                             help="Random angle variation (0.1 = ±10%%, default: 0)")
+                             help="Random angle variation (0.1 = Â±10%%, default: 0)")
     
     # === 3D parameters ===
     three_d_group = parser.add_argument_group('3D Parameters')
@@ -266,7 +266,7 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             print(f"  {name}:")
             print(f"    Axiom: {preset['axiom']}")
             print(f"    Rules: {preset['rules']}")
-            print(f"    Angle: {preset['angle']}°")
+            print(f"    Angle: {preset['angle']}Â°")
             print(f"    Iterations: {preset['iterations']}")
             if 'description' in preset:
                 print(f"    Description: {preset['description']}")
@@ -276,9 +276,9 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
         for name, preset in PRESETS_3D.items():
             print(f"  {name}:")
             print(f"    Axiom: {preset['axiom']}")
-            print(f"    Angle: {preset['angle']}°")
+            print(f"    Angle: {preset['angle']}Â°")
             if 'roll_angle' in preset:
-                print(f"    Roll Angle: {preset['roll_angle']}°")
+                print(f"    Roll Angle: {preset['roll_angle']}Â°")
             if 'description' in preset:
                 print(f"    Description: {preset['description']}")
             print()
@@ -303,6 +303,11 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
     
     # === Get L-system parameters ===
     is_3d = args.three_d
+    
+    # Default biological parameters (will be overridden by preset or CLI)
+    width_decay = args.width_decay
+    length_decay = args.length_decay
+    stochastic = args.stochastic
     
     if args.preset:
         try:
@@ -329,13 +334,35 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
         if 'tropism_strength' in preset and args.tropism_strength == 0:
             tropism_strength = preset['tropism_strength']
         
+        # Get biological parameters from preset with CLI override
+        # Use preset value if CLI arg is at default, otherwise CLI takes precedence
+        if args.width_decay == 0.7 and 'width_decay' in preset:
+            width_decay = preset['width_decay']
+        
+        if args.length_decay == 0.9 and 'length_decay' in preset:
+            length_decay = preset['length_decay']
+        
+        if args.stochastic == 0 and 'stochastic' in preset:
+            stochastic = preset['stochastic']
+        
         print(f"Using preset: {args.preset}")
+        if preset.get('description'):
+            print(f"  Description: {preset['description']}")
         if args.iterations is not None:
             print(f"  (overriding iterations: {iterations})")
         if args.angle is not None:
             print(f"  (overriding angle: {angle})")
         if is_3d:
             print(f"  Mode: 3D")
+        # Show biological parameters if non-default
+        if width_decay != 0.7:
+            print(f"  Width decay: {width_decay}")
+        if length_decay != 0.9:
+            print(f"  Length decay: {length_decay}")
+        if tropism_strength > 0:
+            print(f"  Tropism strength: {tropism_strength}")
+        if stochastic > 0:
+            print(f"  Stochastic variation: {stochastic}")
     elif args.axiom and args.rules:
         axiom = args.axiom
         rules = parse_rules(args.rules)
@@ -400,12 +427,12 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             angle_delta=angle,
             roll_angle=roll_angle if roll_angle else angle,
             step_size=args.step_size,
-            width_decay=args.width_decay,
-            length_decay=args.length_decay,
+            width_decay=width_decay,
+            length_decay=length_decay,
             tropism_vector=tropism_vector if tropism_strength > 0 else None,
             tropism_strength=tropism_strength,
-            angle_variance=args.stochastic,
-            length_variance=args.stochastic * 0.5
+            angle_variance=stochastic,
+            length_variance=stochastic * 0.5
         )
         segments = interpreter.interpret(lsystem_string)
         bbox = interpreter.get_bounding_box(segments)
@@ -420,8 +447,8 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
         interpreter = TurtleInterpreter(
             angle_delta=angle,
             step_size=args.step_size,
-            width_decay=args.width_decay,
-            length_decay=args.length_decay
+            width_decay=width_decay,
+            length_decay=length_decay
         )
         segments = interpreter.interpret(lsystem_string)
         bbox = interpreter.get_bounding_box(segments)
