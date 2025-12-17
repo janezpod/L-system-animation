@@ -2,11 +2,12 @@
 Turtle Graphics Interpreter
 
 Converts L-system strings to 2D line segments for rendering.
+Supports ABOP (The Algorithmic Beauty of Plants) symbols.
 """
 
 import math
-from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from dataclasses import dataclass, field
+from typing import List, Tuple, Optional, NamedTuple
 
 
 @dataclass
@@ -19,6 +20,7 @@ class Segment:
     depth: int
     width: float
     index: int = 0  # Order in which segment was created (for animation)
+    color_index: int = 0  # For color cycling with ' symbol
     
     def length(self) -> float:
         """Calculate segment length."""
@@ -40,7 +42,7 @@ class Segment:
             return self
         if visibility <= 0.0:
             return Segment(self.x1, self.y1, self.x1, self.y1, 
-                          self.depth, self.width, self.index)
+                          self.depth, self.width, self.index, self.color_index)
         
         dx = self.x2 - self.x1
         dy = self.y2 - self.y1
@@ -50,8 +52,22 @@ class Segment:
             self.y1 + dy * visibility,
             self.depth,
             self.width,
-            self.index
+            self.index,
+            self.color_index
         )
+
+
+@dataclass
+class Polygon:
+    """A filled polygon for leaf/petal shapes."""
+    vertices: List[Tuple[float, float]]
+    depth: int
+    color_index: int = 0
+    index: int = 0  # Creation order for animation
+    
+    def is_valid(self) -> bool:
+        """Check if polygon has enough vertices."""
+        return len(self.vertices) >= 3
 
 
 @dataclass
@@ -108,13 +124,51 @@ class TurtleState:
     depth: int
     width: float
     step_size: float
+    color_index: int = 0  # For color cycling
+    in_polygon: bool = False  # Whether currently recording polygon vertices
+    polygon_vertices: List[Tuple[float, float]] = field(default_factory=list)
+    
+    def copy(self) -> 'TurtleState':
+        """Create a deep copy of the state."""
+        return TurtleState(
+            x=self.x,
+            y=self.y,
+            angle=self.angle,
+            depth=self.depth,
+            width=self.width,
+            step_size=self.step_size,
+            color_index=self.color_index,
+            in_polygon=self.in_polygon,
+            polygon_vertices=self.polygon_vertices.copy()
+        )
+
+
+class InterpretResult(NamedTuple):
+    """Result of interpreting an L-system string."""
+    segments: List[Segment]
+    polygons: List[Polygon]
 
 
 class TurtleInterpreter:
     """
     Interprets L-system strings using turtle graphics.
     
-    Converts L-system strings into a list of line segments.
+    Converts L-system strings into a list of line segments and filled polygons.
+    
+    Supported ABOP symbols:
+    - F: Move forward and draw line segment
+    - f: Move forward without drawing
+    - +: Turn left by angle delta
+    - -: Turn right by angle delta
+    - [: Push current state (start branch)
+    - ]: Pop state (end branch)
+    - !: Decrement diameter (multiply width by decay factor)
+    - ': Increment color index
+    - {: Start polygon mode (begin recording vertices)
+    - }: End polygon mode (close and store polygon)
+    - .: Mark current position as polygon vertex
+    - %: Cut off remainder of branch (skip to matching ])
+    - G: Move forward without drawing (alias for f, used in polygon mode)
     """
     
     def __init__(
@@ -123,7 +177,8 @@ class TurtleInterpreter:
         step_size: float = 10.0,
         initial_width: float = 1.0,
         width_decay: float = 0.7,
-        length_decay: float = 0.9
+        length_decay: float = 0.9,
+        width_decrement: float = 0.9  # Factor for ! symbol
     ):
         """
         Initialize turtle interpreter.
@@ -132,28 +187,37 @@ class TurtleInterpreter:
             angle_delta: Turning angle in degrees for + and -
             step_size: Base length of each F segment
             initial_width: Starting line width
-            width_decay: Multiplier for width at each depth level
+            width_decay: Multiplier for width at each depth level (used with [])
             length_decay: Multiplier for length at each depth level
+            width_decrement: Multiplier for ! symbol (explicit width control)
         """
         self.angle_delta = angle_delta
         self.step_size = step_size
         self.initial_width = initial_width
         self.width_decay = width_decay
         self.length_decay = length_decay
+        self.width_decrement = width_decrement
     
-    def interpret(self, lsystem_string: str) -> List[Segment]:
+    def interpret(
+        self, 
+        lsystem_string: str,
+        return_polygons: bool = True
+    ) -> InterpretResult:
         """
-        Interpret an L-system string and return list of segments.
+        Interpret an L-system string and return segments and polygons.
         
         Args:
             lsystem_string: The L-system string to interpret
+            return_polygons: If True, include polygon data in result
             
         Returns:
-            List of Segment objects in the order they were drawn
+            InterpretResult with segments and polygons lists
         """
         segments = []
+        polygons = []
         stack = []
         segment_index = 0
+        polygon_index = 0
         
         # Initial state: at origin, pointing up (90 degrees)
         state = TurtleState(
@@ -162,13 +226,18 @@ class TurtleInterpreter:
             angle=90.0,
             depth=0,
             width=self.initial_width,
-            step_size=self.step_size
+            step_size=self.step_size,
+            color_index=0,
+            in_polygon=False,
+            polygon_vertices=[]
         )
         
-        for char in lsystem_string:
+        i = 0
+        while i < len(lsystem_string):
+            char = lsystem_string[i]
+            
             if char == 'F':
                 # Move forward and draw
-                # Calculate new position
                 rad = math.radians(state.angle)
                 new_x = state.x + state.step_size * math.cos(rad)
                 new_y = state.y + state.step_size * math.sin(rad)
@@ -181,7 +250,8 @@ class TurtleInterpreter:
                     y2=new_y,
                     depth=state.depth,
                     width=state.width,
-                    index=segment_index
+                    index=segment_index,
+                    color_index=state.color_index
                 )
                 segments.append(segment)
                 segment_index += 1
@@ -190,7 +260,7 @@ class TurtleInterpreter:
                 state.x = new_x
                 state.y = new_y
                 
-            elif char == 'f':
+            elif char == 'f' or char == 'G':
                 # Move forward without drawing
                 rad = math.radians(state.angle)
                 state.x += state.step_size * math.cos(rad)
@@ -206,14 +276,7 @@ class TurtleInterpreter:
                 
             elif char == '[':
                 # Push state onto stack and increase depth
-                stack.append(TurtleState(
-                    x=state.x,
-                    y=state.y,
-                    angle=state.angle,
-                    depth=state.depth,
-                    width=state.width,
-                    step_size=state.step_size
-                ))
+                stack.append(state.copy())
                 # Update state for new branch
                 state.depth += 1
                 state.width *= self.width_decay
@@ -222,23 +285,98 @@ class TurtleInterpreter:
             elif char == ']':
                 # Pop state from stack
                 if stack:
+                    # IMPORTANT: Preserve polygon context across push/pop
+                    # In ABOP, polygons can span across branches - the polygon
+                    # collects vertices as the turtle moves, regardless of push/pop
+                    was_in_polygon = state.in_polygon
+                    polygon_verts = state.polygon_vertices
+                    color_idx = state.color_index
+                    
                     state = stack.pop()
+                    
+                    # Restore polygon context if we were recording
+                    if was_in_polygon:
+                        state.in_polygon = True
+                        state.polygon_vertices = polygon_verts
+                        state.color_index = color_idx
+                    
+            elif char == '!':
+                # Decrement diameter (ABOP width control)
+                state.width *= self.width_decrement
+                
+            elif char == "'":
+                # Increment color index
+                state.color_index += 1
+                
+            elif char == '{':
+                # Start polygon mode (don't add vertex - use . for that)
+                state.in_polygon = True
+                state.polygon_vertices = []
+                
+            elif char == '}':
+                # End polygon mode
+                if state.in_polygon:
+                    # Close and store polygon
+                    poly = Polygon(
+                        vertices=state.polygon_vertices.copy(),
+                        depth=state.depth,
+                        color_index=state.color_index,
+                        index=polygon_index
+                    )
+                    if poly.is_valid():
+                        polygons.append(poly)
+                        polygon_index += 1
+                    state.in_polygon = False
+                    state.polygon_vertices = []
+                    
+            elif char == '.':
+                # Mark current position as polygon vertex
+                if state.in_polygon:
+                    state.polygon_vertices.append((state.x, state.y))
+                    
+            elif char == '%':
+                # Cut off remainder of branch - skip to matching ]
+                bracket_depth = 1
+                i += 1
+                while i < len(lsystem_string) and bracket_depth > 0:
+                    if lsystem_string[i] == '[':
+                        bracket_depth += 1
+                    elif lsystem_string[i] == ']':
+                        bracket_depth -= 1
+                    i += 1
+                # Adjust i because outer loop will increment
+                i -= 1
             
             # Characters like X, Y, A, B are ignored (placeholders)
+            i += 1
         
-        return segments
+        return InterpretResult(segments=segments, polygons=polygons)
     
-    def get_bounding_box(self, segments: List[Segment]) -> BoundingBox:
+    def interpret_legacy(self, lsystem_string: str) -> List[Segment]:
         """
-        Calculate bounding box for a list of segments.
+        Legacy interpret method for backward compatibility.
+        
+        Returns only segments list, ignoring polygons.
+        """
+        result = self.interpret(lsystem_string, return_polygons=False)
+        return result.segments
+    
+    def get_bounding_box(
+        self, 
+        segments: List[Segment],
+        polygons: Optional[List[Polygon]] = None
+    ) -> BoundingBox:
+        """
+        Calculate bounding box for segments and polygons.
         
         Args:
             segments: List of Segment objects
+            polygons: Optional list of Polygon objects
             
         Returns:
-            BoundingBox containing all segments
+            BoundingBox containing all geometry
         """
-        if not segments:
+        if not segments and (not polygons or not any(p.vertices for p in polygons)):
             return BoundingBox(0, 0, 1, 1)
         
         min_x = float('inf')
@@ -251,6 +389,14 @@ class TurtleInterpreter:
             min_y = min(min_y, seg.y1, seg.y2)
             max_x = max(max_x, seg.x1, seg.x2)
             max_y = max(max_y, seg.y1, seg.y2)
+        
+        if polygons:
+            for poly in polygons:
+                for x, y in poly.vertices:
+                    min_x = min(min_x, x)
+                    min_y = min(min_y, y)
+                    max_x = max(max_x, x)
+                    max_y = max(max_y, y)
         
         # Ensure minimum size
         if max_x - min_x < 1:
@@ -269,3 +415,9 @@ class TurtleInterpreter:
         if not segments:
             return 0
         return max(seg.depth for seg in segments)
+    
+    def get_max_color_index(self, segments: List[Segment]) -> int:
+        """Get the maximum color index from segments."""
+        if not segments:
+            return 0
+        return max(seg.color_index for seg in segments)

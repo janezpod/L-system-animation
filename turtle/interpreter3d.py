@@ -2,13 +2,13 @@
 3D Turtle Graphics Interpreter
 
 Converts L-system strings to 3D line segments for rendering.
-Implements the HLU (Heading, Left, Up) orientation system.
+Implements the HLU (Heading, Left, Up) orientation system with ABOP enhancements.
 """
 
 import math
 import random
-from dataclasses import dataclass
-from typing import List, Tuple, Optional
+from dataclasses import dataclass, field
+from typing import List, Tuple, Optional, NamedTuple
 
 # Try to use numpy for faster computation, fall back to pure Python
 try:
@@ -108,6 +108,7 @@ class Segment3D:
     width: float
     index: int = 0  # Order in which segment was created
     heading: Tuple[float, float, float] = (0, 1, 0)  # For cylinder orientation
+    color_index: int = 0  # For color cycling with ' symbol
     
     def length(self) -> float:
         """Calculate segment length."""
@@ -124,7 +125,7 @@ class Segment3D:
             return Segment3D(
                 self.x1, self.y1, self.z1,
                 self.x1, self.y1, self.z1,
-                self.depth, self.width, self.index, self.heading
+                self.depth, self.width, self.index, self.heading, self.color_index
             )
         
         dx = self.x2 - self.x1
@@ -135,7 +136,7 @@ class Segment3D:
             self.x1 + dx * visibility,
             self.y1 + dy * visibility,
             self.z1 + dz * visibility,
-            self.depth, self.width, self.index, self.heading
+            self.depth, self.width, self.index, self.heading, self.color_index
         )
     
     def to_2d_segment(self) -> 'Segment':
@@ -143,8 +144,35 @@ class Segment3D:
         from turtle.interpreter import Segment
         return Segment(
             self.x1, self.y1, self.x2, self.y2,
-            self.depth, self.width, self.index
+            self.depth, self.width, self.index, self.color_index
         )
+
+
+@dataclass
+class Polygon3D:
+    """A filled 3D polygon for leaf/petal shapes."""
+    vertices: List[Tuple[float, float, float]]
+    depth: int
+    color_index: int = 0
+    index: int = 0  # Creation order for animation
+    normal: Optional[Tuple[float, float, float]] = None  # Surface normal
+    
+    def is_valid(self) -> bool:
+        """Check if polygon has enough vertices."""
+        return len(self.vertices) >= 3
+    
+    def calculate_normal(self) -> Tuple[float, float, float]:
+        """Calculate surface normal from vertices."""
+        if len(self.vertices) < 3:
+            return (0.0, 0.0, 1.0)
+        
+        # Use first three vertices
+        v0, v1, v2 = self.vertices[:3]
+        e1 = [v1[i] - v0[i] for i in range(3)]
+        e2 = [v2[i] - v0[i] for i in range(3)]
+        
+        normal = _cross_py(e1, e2)
+        return tuple(_normalize_py(normal))
 
 
 @dataclass
@@ -212,6 +240,11 @@ class TurtleState3D:
         self.depth = 0
         self.width = 1.0
         self.step_size = 10.0
+        self.color_index = 0  # For color cycling
+        
+        # Polygon mode
+        self.in_polygon = False
+        self.polygon_vertices: List[Tuple[float, float, float]] = []
     
     def rotate_yaw(self, angle_deg: float) -> None:
         """Rotate around U axis (turn left/right in local frame)."""
@@ -250,6 +283,32 @@ class TurtleState3D:
         """Turn 180 degrees around U axis."""
         self.rotate_yaw(180)
     
+    def roll_to_horizontal(self) -> None:
+        """
+        Roll turtle so L vector is horizontal ($ symbol).
+        Projects L onto horizontal plane and recalculates U.
+        Used to keep leaves/branches oriented properly relative to gravity.
+        """
+        # Gravity vector points down in Y
+        gravity = [0.0, -1.0, 0.0]
+        
+        if self.use_numpy:
+            gravity = np.array(gravity)
+            # L should be orthogonal to H
+            # Project L onto the horizontal plane (perpendicular to gravity)
+            # New L = H × gravity (normalized)
+            new_L = np.cross(self.H, -gravity)
+            if np.linalg.norm(new_L) > 1e-6:
+                self.L = new_L / np.linalg.norm(new_L)
+                self.U = np.cross(self.H, self.L)
+        else:
+            # H × gravity
+            new_L = _cross_py(self.H, [-g for g in gravity])
+            length = math.sqrt(sum(x*x for x in new_L))
+            if length > 1e-6:
+                self.L = [x/length for x in new_L]
+                self.U = _cross_py(self.H, self.L)
+    
     def orthonormalize(self) -> None:
         """Re-orthonormalize HLU vectors to prevent numerical drift."""
         if self.use_numpy:
@@ -280,12 +339,17 @@ class TurtleState3D:
         new_state.depth = self.depth
         new_state.width = self.width
         new_state.step_size = self.step_size
+        new_state.color_index = self.color_index
+        new_state.in_polygon = self.in_polygon
+        new_state.polygon_vertices = self.polygon_vertices.copy()
         return new_state
 
 
 def apply_tropism(heading, tropism_vector, elasticity: float = 0.2):
     """
     Bend heading toward tropism direction.
+    
+    Uses the ABOP torque formula: α = e|H × T|
     
     Args:
         heading: Current heading vector
@@ -307,18 +371,44 @@ def apply_tropism(heading, tropism_vector, elasticity: float = 0.2):
         return _normalize_py(bent)
 
 
+class InterpretResult3D(NamedTuple):
+    """Result of interpreting a 3D L-system string."""
+    segments: List[Segment3D]
+    polygons: List[Polygon3D]
+
+
 class TurtleInterpreter3D:
     """
     Interprets L-system strings using 3D turtle graphics.
     
-    Supports full 3D orientation with HLU vectors:
-    - + : turn left (yaw positive)
-    - - : turn right (yaw negative)
-    - & : pitch down
-    - ^ : pitch up
-    - / : roll right
-    - \\ : roll left
-    - | : turn around (180°)
+    Supports full 3D orientation with HLU vectors and ABOP symbols:
+    
+    Movement:
+    - F: Move forward and draw line segment
+    - f: Move forward without drawing
+    - G: Move forward without drawing (for polygon edges)
+    
+    Rotations:
+    - +: Turn left (yaw positive)
+    - -: Turn right (yaw negative)
+    - &: Pitch down
+    - ^: Pitch up
+    - /: Roll right
+    - \\: Roll left
+    - |: Turn around (180°)
+    
+    Stack operations:
+    - [: Push state (start branch)
+    - ]: Pop state (end branch)
+    
+    ABOP extensions:
+    - !: Decrement diameter (explicit width control)
+    - $: Roll to horizontal (align L with gravity)
+    - ': Increment color index
+    - {: Start polygon mode
+    - }: End polygon mode
+    - .: Mark current position as polygon vertex
+    - %: Cut off remainder of branch
     """
     
     def __init__(
@@ -330,6 +420,7 @@ class TurtleInterpreter3D:
         initial_width: float = 1.0,
         width_decay: float = 0.7,
         length_decay: float = 0.9,
+        width_decrement: float = 0.9,  # Factor for ! symbol
         tropism_vector: Optional[Tuple[float, float, float]] = None,
         tropism_strength: float = 0.0,
         angle_variance: float = 0.0,
@@ -345,10 +436,11 @@ class TurtleInterpreter3D:
             pitch_angle: Pitch angle for & and ^ (defaults to angle_delta)
             step_size: Base length of each F segment
             initial_width: Starting line width
-            width_decay: Multiplier for width at each depth level
+            width_decay: Multiplier for width at each depth level (used with [])
             length_decay: Multiplier for length at each depth level
-            tropism_vector: Direction of environmental stimulus (e.g., (0,1,0) for up)
-            tropism_strength: How strongly to bend toward tropism (0 = none, 0.2 = subtle)
+            width_decrement: Multiplier for ! symbol (explicit width control)
+            tropism_vector: Direction of environmental stimulus
+            tropism_strength: How strongly to bend toward tropism
             angle_variance: Random variance in angles (0.1 = ±10%)
             length_variance: Random variance in length (0.1 = ±10%)
             random_seed: Seed for reproducible randomness
@@ -360,6 +452,7 @@ class TurtleInterpreter3D:
         self.initial_width = initial_width
         self.width_decay = width_decay
         self.length_decay = length_decay
+        self.width_decrement = width_decrement
         
         # Tropism
         self.tropism_strength = tropism_strength
@@ -393,19 +486,26 @@ class TurtleInterpreter3D:
             return max(0.1, base_length + random.uniform(-variance, variance))
         return base_length
     
-    def interpret(self, lsystem_string: str) -> List[Segment3D]:
+    def interpret(
+        self, 
+        lsystem_string: str,
+        return_polygons: bool = True
+    ) -> InterpretResult3D:
         """
-        Interpret an L-system string and return list of 3D segments.
+        Interpret an L-system string and return 3D segments and polygons.
         
         Args:
             lsystem_string: The L-system string to interpret
+            return_polygons: If True, include polygon data in result
             
         Returns:
-            List of Segment3D objects in the order they were drawn
+            InterpretResult3D with segments and polygons lists
         """
         segments = []
+        polygons = []
         stack = []
         segment_index = 0
+        polygon_index = 0
         
         state = TurtleState3D(use_numpy=HAS_NUMPY)
         state.width = self.initial_width
@@ -427,7 +527,8 @@ class TurtleInterpreter3D:
                         depth=state.depth,
                         width=state.width,
                         index=segment_index,
-                        heading=tuple(state.H)
+                        heading=tuple(state.H),
+                        color_index=state.color_index
                     )
                     state.position = new_pos
                 else:
@@ -438,7 +539,8 @@ class TurtleInterpreter3D:
                         depth=state.depth,
                         width=state.width,
                         index=segment_index,
-                        heading=tuple(state.H)
+                        heading=tuple(state.H),
+                        color_index=state.color_index
                     )
                     state.position = new_pos
                 
@@ -450,7 +552,7 @@ class TurtleInterpreter3D:
                     state.H = apply_tropism(state.H, self.tropism_vector, self.tropism_strength)
                     state.orthonormalize()
                 
-            elif char == 'f':
+            elif char == 'f' or char == 'G':
                 # Move forward without drawing
                 step = self._vary_length(state.step_size)
                 if HAS_NUMPY:
@@ -496,7 +598,74 @@ class TurtleInterpreter3D:
             elif char == ']':
                 # Pop state from stack
                 if stack:
+                    # IMPORTANT: Preserve polygon context across push/pop
+                    # In ABOP, polygons can span across branches - the polygon
+                    # collects vertices as the turtle moves, regardless of push/pop
+                    was_in_polygon = state.in_polygon
+                    polygon_verts = state.polygon_vertices
+                    color_idx = state.color_index
+                    
                     state = stack.pop()
+                    
+                    # Restore polygon context if we were recording
+                    if was_in_polygon:
+                        state.in_polygon = True
+                        state.polygon_vertices = polygon_verts
+                        state.color_index = color_idx
+            
+            # ABOP extension symbols
+            elif char == '!':
+                # Decrement diameter
+                state.width *= self.width_decrement
+                
+            elif char == '$':
+                # Roll to horizontal
+                state.roll_to_horizontal()
+                
+            elif char == "'":
+                # Increment color index
+                state.color_index += 1
+                
+            elif char == '{':
+                # Start polygon mode (don't add vertex - use . for that)
+                state.in_polygon = True
+                state.polygon_vertices = []
+                    
+            elif char == '}':
+                # End polygon mode
+                if state.in_polygon:
+                    poly = Polygon3D(
+                        vertices=state.polygon_vertices.copy(),
+                        depth=state.depth,
+                        color_index=state.color_index,
+                        index=polygon_index
+                    )
+                    if poly.is_valid():
+                        poly.normal = poly.calculate_normal()
+                        polygons.append(poly)
+                        polygon_index += 1
+                    state.in_polygon = False
+                    state.polygon_vertices = []
+                    
+            elif char == '.':
+                # Mark current position as polygon vertex
+                if state.in_polygon:
+                    if HAS_NUMPY:
+                        state.polygon_vertices.append(tuple(state.position))
+                    else:
+                        state.polygon_vertices.append(tuple(state.position))
+                        
+            elif char == '%':
+                # Cut off remainder of branch - skip to matching ]
+                bracket_depth = 1
+                i += 1
+                while i < len(lsystem_string) and bracket_depth > 0:
+                    if lsystem_string[i] == '[':
+                        bracket_depth += 1
+                    elif lsystem_string[i] == ']':
+                        bracket_depth -= 1
+                    i += 1
+                i -= 1  # Adjust because outer loop will increment
             
             # Periodically orthonormalize to prevent drift
             if segment_index > 0 and segment_index % 100 == 0:
@@ -504,11 +673,24 @@ class TurtleInterpreter3D:
             
             i += 1
         
-        return segments
+        return InterpretResult3D(segments=segments, polygons=polygons)
     
-    def get_bounding_box(self, segments: List[Segment3D]) -> BoundingBox3D:
-        """Calculate 3D bounding box for a list of segments."""
-        if not segments:
+    def interpret_legacy(self, lsystem_string: str) -> List[Segment3D]:
+        """
+        Legacy interpret method for backward compatibility.
+        
+        Returns only segments list, ignoring polygons.
+        """
+        result = self.interpret(lsystem_string, return_polygons=False)
+        return result.segments
+    
+    def get_bounding_box(
+        self, 
+        segments: List[Segment3D],
+        polygons: Optional[List[Polygon3D]] = None
+    ) -> BoundingBox3D:
+        """Calculate 3D bounding box for segments and polygons."""
+        if not segments and (not polygons or not any(p.vertices for p in polygons)):
             return BoundingBox3D(0, 0, 0, 1, 1, 1)
         
         min_x = min_y = min_z = float('inf')
@@ -521,6 +703,16 @@ class TurtleInterpreter3D:
             max_x = max(max_x, seg.x1, seg.x2)
             max_y = max(max_y, seg.y1, seg.y2)
             max_z = max(max_z, seg.z1, seg.z2)
+        
+        if polygons:
+            for poly in polygons:
+                for x, y, z in poly.vertices:
+                    min_x = min(min_x, x)
+                    min_y = min(min_y, y)
+                    min_z = min(min_z, z)
+                    max_x = max(max_x, x)
+                    max_y = max(max_y, y)
+                    max_z = max(max_z, z)
         
         # Ensure minimum size
         for min_val, max_val in [(min_x, max_x), (min_y, max_y), (min_z, max_z)]:
@@ -541,6 +733,12 @@ class TurtleInterpreter3D:
             return 0
         return max(seg.depth for seg in segments)
     
+    def get_max_color_index(self, segments: List[Segment3D]) -> int:
+        """Get the maximum color index from segments."""
+        if not segments:
+            return 0
+        return max(seg.color_index for seg in segments)
+    
     def to_2d_segments(self, segments_3d: List[Segment3D]) -> List:
         """Convert 3D segments to 2D (XY projection)."""
         return [seg.to_2d_segment() for seg in segments_3d]
@@ -556,7 +754,7 @@ def detect_3d_symbols(lsystem_string: str) -> bool:
     Returns:
         True if 3D symbols are present
     """
-    symbols_3d = {'&', '^', '/', '\\', '|'}
+    symbols_3d = {'&', '^', '/', '\\', '|', '$'}
     return bool(symbols_3d.intersection(set(lsystem_string)))
 
 

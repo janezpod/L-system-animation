@@ -6,7 +6,8 @@ from .controller import (
     ease_out_cubic,
     ease_out_quad,
     ease_in_out_cubic,
-    sigmoid_growth
+    sigmoid_growth,
+    SegmentGrowthInfo
 )
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     'ease_out_cubic',
     'ease_out_quad',
     'ease_in_out_cubic',
-    'sigmoid_growth'
+    'sigmoid_growth',
+    'SegmentGrowthInfo'
 ]

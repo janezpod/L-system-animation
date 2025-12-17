@@ -1,5 +1,5 @@
 """POV-Ray rendering module."""
-from .generator import POVRayGenerator, ColorMode, depth_to_color
+from .generator import POVRayGenerator, ColorMode, depth_to_color, leaf_color
 from .renderer import POVRayRenderer, POVRayError, check_povray_available
 
 # Import 3D generator
@@ -15,6 +15,7 @@ __all__ = [
     'POVRayError',
     'ColorMode',
     'depth_to_color',
+    'leaf_color',
     'check_povray_available'
 ]
 

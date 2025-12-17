@@ -4,12 +4,15 @@ L-System Plant Growth Animation Generator
 
 Generates animated GIFs of L-system plant growth using POV-Ray for rendering.
 Supports both 2D and 3D plants with multiple growth animation styles.
+
+Enhanced with ABOP features:
+- Parametric L-systems with conditional and stochastic productions
+- Sphere sweep rendering for smoother branches
+- Polygon rendering for leaves and petals
 """
 
 import argparse
 import os
-import shutil
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -19,7 +22,10 @@ PROJECT_ROOT = Path(__file__).parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from lsystem.engine import LSystem, parse_rules
-from lsystem.presets import PRESETS, PRESETS_3D, get_preset, list_presets, list_presets_by_category
+from lsystem.presets import (
+    PRESETS, PRESETS_3D, get_preset, list_presets, list_presets_by_category,
+    PARAMETRIC_PRESETS, get_parametric_preset, list_parametric_presets
+)
 from turtle.interpreter import TurtleInterpreter
 from povray.generator import POVRayGenerator, ColorMode
 from povray.renderer import POVRayRenderer, check_povray_available
@@ -141,6 +147,22 @@ def create_gif(
         return False
 
 
+def parse_constants(constants_str: str) -> dict:
+    """Parse constants string like 'R1:0.9,WR:0.707' into dict."""
+    if not constants_str:
+        return {}
+    
+    constants = {}
+    for item in constants_str.split(','):
+        if ':' in item:
+            name, value = item.split(':', 1)
+            try:
+                constants[name.strip()] = float(value.strip())
+            except ValueError:
+                print(f"Warning: Invalid constant value '{item}', skipping")
+    return constants
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Generate animated L-system plant growth GIFs (2D and 3D)",
@@ -155,12 +177,23 @@ Examples:
   python main.py --preset tree_3d_simple --3d --output tree3d.gif
   python main.py --preset spiral_plant_3d --3d --animate-camera --output spiral.gif
   
+  # Parametric L-systems (ABOP-style)
+  python main.py --preset growing_tree_param --parametric --output growing.gif
+  python main.py --preset stochastic_bush_abop --parametric --seed 42 --output bush.gif
+  python main.py --preset developmental_leaf --parametric --render-polygons --output leaf.gif
+  
+  # Rendering options
+  python main.py --preset fern --sphere-sweep --output smooth_fern.gif
+  python main.py --preset tree --sphere-sweep --render-polygons --output tree.gif
+  
   # Custom L-system
   python main.py --axiom "F" --rules "F:F[-F][+F]" --angle 25 --iterations 5
 
 Available 2D presets: """ + ", ".join(list_presets(include_3d=False)) + """
 
-Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
+Available 3D presets: """ + ", ".join(PRESETS_3D.keys()) + """
+
+Available parametric presets: """ + ", ".join(list_parametric_presets())
     )
     
     # === L-System parameters ===
@@ -174,6 +207,15 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
                            help="Turning angle in degrees")
     lsys_group.add_argument("--iterations", "-i", type=int, default=None,
                            help="Number of L-system iterations")
+    
+    # === Parametric L-System parameters (NEW) ===
+    param_group = parser.add_argument_group('Parametric L-System Options')
+    param_group.add_argument("--parametric", action="store_true",
+                            help="Use parametric L-system engine (for ABOP-style plants)")
+    param_group.add_argument("--constants", type=str, default=None,
+                            help="Named constants as 'R1:0.9,WR:0.707'")
+    param_group.add_argument("--seed", type=int, default=None,
+                            help="Random seed for stochastic productions")
     
     # === Animation parameters ===
     anim_group = parser.add_argument_group('Animation Parameters')
@@ -201,6 +243,13 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
                           default='depth',
                           help="Coloring style (default: depth)")
     
+    # === Rendering parameters (NEW) ===
+    render_group = parser.add_argument_group('Rendering Options')
+    render_group.add_argument("--sphere-sweep", action="store_true",
+                             help="Use sphere_sweep for smoother branches")
+    render_group.add_argument("--render-polygons", action="store_true",
+                             help="Render filled polygons for leaves (from { } notation)")
+    
     # === Turtle parameters ===
     turtle_group = parser.add_argument_group('Turtle Parameters')
     turtle_group.add_argument("--step-size", type=float, default=10.0,
@@ -210,7 +259,7 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
     turtle_group.add_argument("--length-decay", type=float, default=0.9,
                              help="Length multiplier per depth (default: 0.9)")
     turtle_group.add_argument("--stochastic", type=float, default=0.0,
-                             help="Random angle variation (0.1 = Â±10%%, default: 0)")
+                             help="Random angle variation (0.1 = ±10%%, default: 0)")
     
     # === 3D parameters ===
     three_d_group = parser.add_argument_group('3D Parameters')
@@ -256,6 +305,8 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
                            help="List available presets and exit")
     info_group.add_argument("--list-categories", action="store_true",
                            help="List presets by category and exit")
+    info_group.add_argument("--list-parametric", action="store_true",
+                           help="List parametric presets and exit")
     
     args = parser.parse_args()
     
@@ -266,7 +317,7 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             print(f"  {name}:")
             print(f"    Axiom: {preset['axiom']}")
             print(f"    Rules: {preset['rules']}")
-            print(f"    Angle: {preset['angle']}Â°")
+            print(f"    Angle: {preset['angle']}°")
             print(f"    Iterations: {preset['iterations']}")
             if 'description' in preset:
                 print(f"    Description: {preset['description']}")
@@ -276,9 +327,9 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
         for name, preset in PRESETS_3D.items():
             print(f"  {name}:")
             print(f"    Axiom: {preset['axiom']}")
-            print(f"    Angle: {preset['angle']}Â°")
+            print(f"    Angle: {preset['angle']}°")
             if 'roll_angle' in preset:
-                print(f"    Roll Angle: {preset['roll_angle']}Â°")
+                print(f"    Roll Angle: {preset['roll_angle']}°")
             if 'description' in preset:
                 print(f"    Description: {preset['description']}")
             print()
@@ -292,6 +343,19 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
                 print(f"  - {preset}")
         return
     
+    if args.list_parametric:
+        print("Available Parametric Presets (ABOP-style):\n")
+        for name in list_parametric_presets():
+            preset = get_parametric_preset(name)
+            print(f"  {name}:")
+            print(f"    Axiom: {preset['axiom']}")
+            if 'description' in preset:
+                print(f"    Description: {preset['description']}")
+            if 'constants' in preset:
+                print(f"    Constants: {preset['constants']}")
+            print()
+        return
+    
     # === Check POV-Ray availability ===
     if not args.skip_render:
         available, message = check_povray_available()
@@ -303,23 +367,54 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
     
     # === Get L-system parameters ===
     is_3d = args.three_d
+    is_parametric = args.parametric
+    use_sphere_sweep = args.sphere_sweep
+    render_polygons = args.render_polygons
     
-    # Default biological parameters (will be overridden by preset or CLI)
+    # Default biological parameters
     width_decay = args.width_decay
     length_decay = args.length_decay
     stochastic = args.stochastic
+    constants = parse_constants(args.constants) if args.constants else {}
+    
+    # Variables for parametric mode
+    parametric_lsystem = None
+    productions_list = None
     
     if args.preset:
-        try:
-            preset = get_preset(args.preset, include_3d=True)
-        except KeyError as e:
-            print(f"Error: {e}")
-            sys.exit(1)
+        # Check if it's a parametric preset
+        if args.preset in PARAMETRIC_PRESETS or args.parametric:
+            try:
+                preset = get_parametric_preset(args.preset)
+                is_parametric = True
+            except KeyError:
+                # Fall back to regular preset
+                try:
+                    preset = get_preset(args.preset, include_3d=True)
+                except KeyError as e:
+                    print(f"Error: {e}")
+                    sys.exit(1)
+        else:
+            try:
+                preset = get_preset(args.preset, include_3d=True)
+            except KeyError as e:
+                print(f"Error: {e}")
+                sys.exit(1)
         
         axiom = preset['axiom']
-        rules = preset['rules']
         angle = args.angle if args.angle is not None else preset['angle']
         iterations = args.iterations if args.iterations is not None else preset['iterations']
+        
+        # Handle parametric preset
+        if is_parametric and 'productions' in preset:
+            productions_list = preset['productions']
+            if 'constants' in preset:
+                # Merge preset constants with CLI constants (CLI takes precedence)
+                preset_constants = preset['constants'].copy()
+                preset_constants.update(constants)
+                constants = preset_constants
+        else:
+            rules = preset['rules']
         
         # Check if preset is 3D
         if preset.get('is_3d') or args.preset in PRESETS_3D:
@@ -334,8 +429,12 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
         if 'tropism_strength' in preset and args.tropism_strength == 0:
             tropism_strength = preset['tropism_strength']
         
-        # Get biological parameters from preset with CLI override
-        # Use preset value if CLI arg is at default, otherwise CLI takes precedence
+        # Get tropism direction from preset if specified
+        tropism_direction_preset = None
+        if 'tropism_direction' in preset:
+            tropism_direction_preset = preset['tropism_direction']
+        
+        # Get biological parameters from preset
         if args.width_decay == 0.7 and 'width_decay' in preset:
             width_decay = preset['width_decay']
         
@@ -348,13 +447,18 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
         print(f"Using preset: {args.preset}")
         if preset.get('description'):
             print(f"  Description: {preset['description']}")
+        if is_parametric:
+            print(f"  Type: Parametric L-system")
         if args.iterations is not None:
             print(f"  (overriding iterations: {iterations})")
         if args.angle is not None:
             print(f"  (overriding angle: {angle})")
         if is_3d:
             print(f"  Mode: 3D")
-        # Show biological parameters if non-default
+        if use_sphere_sweep:
+            print(f"  Rendering: Sphere sweep (smooth branches)")
+        if render_polygons:
+            print(f"  Rendering: Polygons enabled")
         if width_decay != 0.7:
             print(f"  Width decay: {width_decay}")
         if length_decay != 0.9:
@@ -363,6 +467,9 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             print(f"  Tropism strength: {tropism_strength}")
         if stochastic > 0:
             print(f"  Stochastic variation: {stochastic}")
+        if constants:
+            print(f"  Constants: {constants}")
+            
     elif args.axiom and args.rules:
         axiom = args.axiom
         rules = parse_rules(args.rules)
@@ -370,6 +477,7 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
         iterations = args.iterations if args.iterations is not None else 5
         roll_angle = args.roll_angle
         tropism_strength = args.tropism_strength
+        tropism_direction_preset = None  # No preset direction for custom
         print(f"Using custom L-system: {axiom} with rules {rules}")
         
         # Auto-detect 3D from rules
@@ -380,8 +488,11 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
     else:
         parser.error("Either --preset or both --axiom and --rules are required")
     
-    # Parse tropism direction
-    tropism_vector = tuple(float(x) for x in args.tropism_direction.split(','))
+    # Parse tropism direction - prefer preset over CLI default
+    if 'tropism_direction_preset' in dir() and tropism_direction_preset is not None:
+        tropism_vector = tuple(tropism_direction_preset)
+    else:
+        tropism_vector = tuple(float(x) for x in args.tropism_direction.split(','))
     
     # === Setup output directories ===
     output_dir = args.output_dir
@@ -406,20 +517,70 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
     
     # === Step 1: Generate L-system string ===
     print(f"\n[1/5] Generating L-system ({iterations} iterations)...")
-    lsystem = LSystem(axiom, rules, iterations)
     
-    try:
-        lsystem_string = lsystem.generate()
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+    if is_parametric and productions_list is not None:
+        # Use parametric L-system engine
+        from lsystem.parametric import ParametricLSystem, parse_production_string, Production
+        
+        # Parse productions - handle both string and dict formats
+        productions = []
+        for prod_item in productions_list:
+            if isinstance(prod_item, str):
+                # Plain string format: "A(l,w) : l < 5 -> ..."
+                productions.append(parse_production_string(prod_item))
+            elif isinstance(prod_item, dict):
+                # Dict format: {"rule": "...", "probability": 0.33}
+                prod = parse_production_string(prod_item['rule'])
+                if 'probability' in prod_item:
+                    prod = Production(
+                        predecessor=prod.predecessor,
+                        formal_params=prod.formal_params,
+                        condition=prod.condition,
+                        successor=prod.successor,
+                        probability=prod_item['probability'],
+                        left_context=prod.left_context,
+                        right_context=prod.right_context
+                    )
+                productions.append(prod)
+            else:
+                raise ValueError(f"Unknown production format: {type(prod_item)}")
+        
+        parametric_lsystem = ParametricLSystem(
+            axiom=axiom,
+            productions=productions,
+            iterations=iterations,
+            random_seed=args.seed,
+            constants=constants
+        )
+        
+        try:
+            modules = parametric_lsystem.generate()
+            lsystem_string = parametric_lsystem.to_string(modules)
+        except Exception as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+        
+        print(f"  Modules generated: {len(modules):,}")
+        print(f"  String length: {len(lsystem_string):,} characters")
+    else:
+        # Use standard L-system engine
+        lsystem = LSystem(axiom, rules, iterations)
+        
+        try:
+            lsystem_string = lsystem.generate()
+        except Exception as e:
+            print(f"Error: {e}")
+            sys.exit(1)
+        
+        print(f"  String length: {len(lsystem_string):,} characters")
     
     segment_count = lsystem_string.count('F')
-    print(f"  String length: {len(lsystem_string):,} characters")
     print(f"  Segment count: {segment_count:,}")
     
     # === Step 2: Interpret as turtle graphics ===
     print(f"\n[2/5] Interpreting {'3D' if is_3d else '2D'} turtle graphics...")
+    
+    polygons = []  # Will hold polygon data if any
     
     if is_3d:
         from turtle.interpreter3d import TurtleInterpreter3D
@@ -434,11 +595,21 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             angle_variance=stochastic,
             length_variance=stochastic * 0.5
         )
-        segments = interpreter.interpret(lsystem_string)
+        result = interpreter.interpret(lsystem_string)
+        
+        # Handle new InterpretResult3D or legacy list format
+        if hasattr(result, 'segments'):
+            segments = result.segments
+            polygons = result.polygons if hasattr(result, 'polygons') else []
+        else:
+            segments = result
+        
         bbox = interpreter.get_bounding_box(segments)
         max_depth = interpreter.get_max_depth(segments)
         
         print(f"  Segments: {len(segments):,}")
+        if polygons:
+            print(f"  Polygons: {len(polygons):,}")
         print(f"  Max depth: {max_depth}")
         print(f"  3D Bounding box: "
               f"({bbox.min_x:.1f}, {bbox.min_y:.1f}, {bbox.min_z:.1f}) to "
@@ -450,11 +621,21 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             width_decay=width_decay,
             length_decay=length_decay
         )
-        segments = interpreter.interpret(lsystem_string)
-        bbox = interpreter.get_bounding_box(segments)
+        result = interpreter.interpret(lsystem_string)
+        
+        # Handle new InterpretResult or legacy list format
+        if hasattr(result, 'segments'):
+            segments = result.segments
+            polygons = result.polygons if hasattr(result, 'polygons') else []
+        else:
+            segments = result
+        
+        bbox = interpreter.get_bounding_box(segments, polygons if polygons else None)
         max_depth = interpreter.get_max_depth(segments)
         
         print(f"  Segments: {len(segments):,}")
+        if polygons:
+            print(f"  Polygons: {len(polygons):,}")
         print(f"  Max depth: {max_depth}")
         print(f"  Bounding box: ({bbox.min_x:.1f}, {bbox.min_y:.1f}) to ({bbox.max_x:.1f}, {bbox.max_y:.1f})")
     
@@ -485,7 +666,9 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             height=args.height,
             padding_percent=args.padding,
             color_mode=color_mode,
-            show_leaves=args.show_leaves
+            show_leaves=args.show_leaves,
+            use_sphere_sweep=use_sphere_sweep,
+            render_polygons=render_polygons
         )
     
     # Setup animation controller
@@ -502,7 +685,7 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
     def pov_progress(current, total):
         print_progress(current, total, "  POV-Ray scenes")
     
-    # Generate frames (different API for 3D)
+    # Generate frames
     if is_3d:
         # Need custom frame generation for 3D
         controller.prepare_segments(segments)
@@ -521,10 +704,53 @@ Available 3D presets: """ + ", ".join(PRESETS_3D.keys())
             pov_files.append(pov_file)
             pov_progress(frame + 1, args.frames)
     else:
-        pov_files = controller.generate_frames(
-            segments, bbox, generator,
-            progress_callback=pov_progress
-        )
+        # Check if we should use enhanced generation with polygons
+        if (use_sphere_sweep or render_polygons) and hasattr(generator, 'generate_scene_enhanced'):
+            controller.prepare_segments(segments)
+            pov_files = []
+            terminal_indices = set(controller.get_terminal_segments(segments))
+            
+            # Calculate polygon visibility based on frame
+            num_polygons = len(polygons) if polygons else 0
+            
+            for frame in range(args.frames):
+                frame_segments = controller.get_frame_segments(segments, frame)
+                frame_terminal = [seg for seg in frame_segments if seg.index in terminal_indices]
+                
+                # Animate polygons: reveal based on frame progress
+                frame_polygons = None
+                if render_polygons and polygons:
+                    # Calculate which polygons should be visible
+                    # Use same timing logic as segments
+                    frame_progress = frame / (args.frames - 1) if args.frames > 1 else 1.0
+                    growth_period = 0.8  # Use 80% of animation for growth
+                    
+                    frame_polygons = []
+                    for poly in polygons:
+                        # Calculate when this polygon should appear
+                        poly_progress = poly.index / num_polygons if num_polygons > 0 else 0
+                        start_time = poly_progress * growth_period
+                        
+                        # Polygon is visible if we've passed its start time
+                        if frame_progress >= start_time:
+                            frame_polygons.append(poly)
+                
+                # Use enhanced generation with polygons
+                pov_file = generator.generate_frame_enhanced(
+                    frame_segments, 
+                    bbox, 
+                    frame, 
+                    max_depth,
+                    frame_terminal,
+                    frame_polygons
+                )
+                pov_files.append(pov_file)
+                pov_progress(frame + 1, args.frames)
+        else:
+            pov_files = controller.generate_frames(
+                segments, bbox, generator,
+                progress_callback=pov_progress
+            )
     
     # === Step 4: Render with POV-Ray ===
     if args.skip_render:

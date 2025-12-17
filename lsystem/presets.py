@@ -358,133 +358,156 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     # REALISTIC 3D TREES
     # =========================================================================
     "oak_3d": {
-        "axiom": "FA",
+        "axiom": "FFA",
         "rules": {
-            "A": "F[&+B][-&B]FA",
-            "B": "F[+B][-B]"
+            # 4 branches per whorl, each purely outward (&), roll 90° between
+            "A": "[&B]/[&B]/[&B]/[&B]/FA",
+            # Secondary branches subdivide
+            "B": "FF[&+C][&-C]",
+            "C": "FF[+C][-C]",
+            "F": "F"
         },
         "angle": 35,
-        "roll_angle": 137.5,  # Golden angle
-        "iterations": 7,
-        "tropism_strength": 0.18,
-        "width_decay": 0.707,  # Leonardo's rule
-        "length_decay": 0.85,
-        "stochastic": 0.12,
-        "description": "Realistic oak with gravitropism and golden angle phyllotaxis"
+        "roll_angle": 90,  # 360/4 = 90° for 4-fold symmetry
+        "iterations": 6,
+        "tropism_strength": 0.03,
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.68,
+        "length_decay": 0.70,
+        "stochastic": 0.18,
+        "description": "Dense spreading oak with full 3D crown"
     },
     
     "maple_3d": {
-        "axiom": "A",
+        "axiom": "FFA",
         "rules": {
-            "A": "F[+B][-B]/A",  # Decussate: opposite pairs, 90° rotation
-            "B": "F[+B][-B]",
-            "F": "FF"
+            # Opposite branching - branches on opposite sides, rotate 90° each level
+            "A": "[&B]/[&B]/A",
+            "B": "FF[&+C][&-C]",
+            "C": "F[+C][-C]"
         },
-        "angle": 45,
+        "angle": 35,
         "roll_angle": 90,  # Decussate phyllotaxis
-        "iterations": 6,
-        "tropism_strength": 0.12,
-        "width_decay": 0.72,
-        "length_decay": 0.78,
-        "description": "Maple with opposite/decussate branching"
+        "iterations": 7,
+        "tropism_strength": 0.05,
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.62,
+        "length_decay": 0.65,
+        "stochastic": 0.15,
+        "description": "Maple with dense opposite branching"
     },
     
     "birch_3d": {
-        "axiom": "FA",
+        "axiom": "FFFFA",
         "rules": {
-            "A": "F[&+B]/A",
-            "B": "F[-B][+B]",
-            "F": "F"
+            # 3 branches per whorl for asymmetric natural look
+            "A": "[&B]/[&B]/[&B]/FA",
+            "B": "F[&+C][&-C]",
+            "C": "F[+C][-C]"
         },
-        "angle": 30,
-        "roll_angle": 137.5,
-        "iterations": 9,
-        "tropism_strength": 0.12,
-        "width_decay": 0.65,
-        "length_decay": 0.88,
-        "stochastic": 0.10,
+        "angle": 35,
+        "roll_angle": 120,  # 360/3 for 3-fold
+        "iterations": 6,
+        "tropism_strength": 0.04,
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.58,
+        "length_decay": 0.72,
+        "stochastic": 0.20,
         "description": "Delicate birch with fine branching"
     },
     
     "willow_3d": {
-        "axiom": "FFFFA",
+        "axiom": "FFFFFFA",  # Taller trunk
         "rules": {
-            "A": "F[&&&B]/A",
-            "B": "F[&+B][&-B]FB",
-            "F": "F"
+            # Branches that droop - use pitch down (&) heavily
+            "A": "[&&B]///[&&B]///[&&B]///[&&B]///A",
+            # Drooping branches that cascade down
+            "B": "F[&+B][&-B]&F&F&FB",
         },
-        "angle": 20,
-        "roll_angle": 137.5,
-        "iterations": 10,
-        "tropism_strength": 0.45,  # Strong droop
-        "width_decay": 0.70,
-        "length_decay": 0.92,
-        "description": "Weeping willow with extreme gravitropism"
+        "angle": 15,  # Narrow angle for cascading effect
+        "roll_angle": 90,  # 4 branches per whorl
+        "iterations": 6,
+        "tropism_strength": 0.35,
+        "tropism_direction": [0, -1, 0],  # DROOP DOWN!
+        "width_decay": 0.75,
+        "length_decay": 0.88,
+        "stochastic": 0.10,
+        "description": "Weeping willow with drooping branches"
     },
     
     "pine_honda": {
-        "axiom": "FA",
+        "axiom": "FFFA",
         "rules": {
-            "A": "F[&FA]/[&FA]/[&FA]"  # Ternary branching
+            # 3 branches per whorl (ternary), spiral up trunk
+            "A": "[&B]/[&B]/[&B]/FA",
+            "B": "FF[+C][-C]",
+            "C": "F[+C][-C]"
         },
-        "angle": 18.95,  # Honda's optimal branching angle
-        "roll_angle": 94.74,  # Honda's divergence d1
-        "iterations": 8,
-        "tropism_strength": 0.14,
-        "width_decay": 0.707,
-        "length_decay": 0.9,
-        "description": "Pine tree using Honda's ternary model parameters"
+        "angle": 25,
+        "roll_angle": 120,  # 360/3 for 3-fold symmetry
+        "iterations": 7,
+        "tropism_strength": 0.08,
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.62,
+        "length_decay": 0.78,
+        "description": "Pine tree with whorled branches"
     },
     
     "conifer_realistic": {
         "axiom": "FFFFT",
         "rules": {
-            "T": "F[^^^L][&&&L]//T",
-            "L": "F[-F][+F]F"
+            # Whorled branches, 4 per level
+            "T": "[&L]/[&L]/[&L]/[&L]/FT",
+            "L": "FF[-F][+F]"
         },
-        "angle": 28,
-        "roll_angle": 137.5,
-        "iterations": 10,
-        "tropism_strength": 0.08,
-        "width_decay": 0.73,
-        "length_decay": 0.95,
-        "description": "Conifer with whorled branches and golden angle"
+        "angle": 30,
+        "roll_angle": 90,
+        "iterations": 9,
+        "tropism_strength": 0.05,
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.70,
+        "length_decay": 0.90,
+        "description": "Conifer with whorled branches"
     },
     
     # =========================================================================
     # TREE ARCHITECTURE TYPES
     # =========================================================================
     "monopodial_tree": {
-        "axiom": "A",
+        "axiom": "FFFA",
         "rules": {
-            "A": "F/[+L][-L]A",
-            "L": "F[-F][+F]F",
-            "F": "FF"
+            # Single dominant trunk with radial branches
+            "A": "[&B]/[&B]/[&B]/FA",
+            "B": "F[+C][-C]",
+            "C": "F[+C][-C]"
         },
-        "angle": 45,
-        "roll_angle": 137.5,
-        "iterations": 8,
-        "tropism_strength": 0.10,
-        "width_decay": 0.707,
-        "length_decay": 0.85,
+        "angle": 40,
+        "roll_angle": 120,
+        "iterations": 6,
+        "tropism_strength": 0.05,
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.65,
+        "length_decay": 0.78,
         "description": "Monopodial tree - single dominant trunk (like pine)"
     },
     
     "sympodial_tree": {
-        "axiom": "A",
+        "axiom": "FFA",
         "rules": {
-            "A": "F[&B]//[&C]",
-            "B": "F[+B][-B]",
-            "C": "F[+C][-C]",
-            "F": "FF"
+            # Bifurcating main axis
+            "A": "[&+B]/[&-B]",
+            "B": "FF[&+C][&-C]B",
+            "C": "F[+C][-C]"
         },
-        "angle": 35,
-        "roll_angle": 180,
-        "iterations": 6,
-        "tropism_strength": 0.15,
-        "width_decay": 0.72,
-        "length_decay": 0.80,
-        "description": "Sympodial tree - bifurcating branches (like oak/maple)"
+        "angle": 30,
+        "roll_angle": 90,
+        "iterations": 5,
+        "tropism_strength": 0.08,
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.70,
+        "length_decay": 0.75,
+        "stochastic": 0.12,
+        "description": "Sympodial tree - bifurcating branches"
     },
     
     # =========================================================================
@@ -493,12 +516,13 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "fern_3d_alternating": {
         "axiom": "A",
         "rules": {
-            "A": "F[+P]/[-P]A",  # Alternating pinnae
-            "P": "F[+F][-F]F"
+            # Alternating pinnae with roll
+            "A": "F[&+P]//[&-P]//A",
+            "P": "F[+F]/[-F]F"
         },
         "angle": 45,
-        "roll_angle": 180,  # Alternate sides
-        "iterations": 8,
+        "roll_angle": 137.5,
+        "iterations": 7,
         "width_decay": 0.75,
         "length_decay": 0.88,
         "description": "3D fern with alternating pinnae arrangement"
@@ -507,12 +531,13 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "fern_3d_spiral": {
         "axiom": "A",
         "rules": {
+            # Spiral arrangement with golden angle
             "A": "F[&P]/A",
-            "P": "FF"
+            "P": "F[+F][-F]"
         },
         "angle": 50,
         "roll_angle": 137.5,  # Golden angle spiral
-        "iterations": 12,
+        "iterations": 15,
         "width_decay": 0.78,
         "length_decay": 0.92,
         "description": "Spiral fern frond with golden angle phyllotaxis"
@@ -521,13 +546,14 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "fern_3d_bipinnate": {
         "axiom": "A",
         "rules": {
-            "A": "F[+B]/[-B]A",
-            "B": "F[+L][-L]B",
+            # Bipinnate with roll distribution
+            "A": "F[&+B]//[&-B]//A",
+            "B": "F[+L]/[-L]B",
             "L": "F"
         },
-        "angle": 45,  # Primary angle
-        "roll_angle": 180,
-        "iterations": 6,
+        "angle": 45,
+        "roll_angle": 137.5,
+        "iterations": 5,
         "width_decay": 0.72,
         "length_decay": 0.85,
         "description": "Bipinnate 3D fern (twice-divided fronds)"
@@ -536,12 +562,13 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "fern_3d_maidenhair": {
         "axiom": "FFFA",
         "rules": {
-            "A": "F[&+L][&-L]/A",
-            "L": "F[+F]F[-F]"
+            # Delicate fronds with roll
+            "A": "F[&+L]//[&-L]//A",
+            "L": "F[+F]/F[-F]"
         },
         "angle": 35,
         "roll_angle": 137.5,
-        "iterations": 8,
+        "iterations": 7,
         "width_decay": 0.68,
         "length_decay": 0.90,
         "description": "Delicate maidenhair fern structure"
@@ -644,8 +671,9 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "helix_vine": {
         "axiom": "A",
         "rules": {
-            "A": "F/[+L]A",
-            "L": "FF"
+            # Helical pattern with leaves on all sides
+            "A": "F/[&+L]A",
+            "L": "F[+F][-F]"
         },
         "angle": 30,
         "roll_angle": 36,  # 10-fold helix (360/10)
@@ -658,12 +686,13 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "crystal_tree": {
         "axiom": "FA",
         "rules": {
-            "A": "F[+A][-A][&A][^A]",
+            # Orthogonal branching with roll
+            "A": "F[+A]/[-A]/[&A]/[^A]/",
             "F": "F"
         },
         "angle": 90,
         "roll_angle": 90,
-        "iterations": 5,
+        "iterations": 4,
         "width_decay": 0.707,
         "length_decay": 0.75,
         "description": "Crystalline orthogonal branching"
@@ -690,8 +719,9 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     # =========================================================================
     "tree_3d_simple": {
         "axiom": "F",
-        "rules": {"F": "F[+F][-F][&F][^F]"},
+        "rules": {"F": "F[+F]/[-F]/[&F]/[^F]/"},
         "angle": 25,
+        "roll_angle": 90,
         "iterations": 4,
         "description": "Simple 3D branching tree (legacy)"
     },
@@ -702,9 +732,10 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
             "A": "[&FL!A]////[&FL!A]//////[&FL!A]",
             "F": "S//F",
             "S": "F",
-            "L": "[-F][+F]F"
+            "L": "[-F]/[+F]F"
         },
         "angle": 22.5,
+        "roll_angle": 22.5,
         "iterations": 6,
         "description": "3D bush with spiral branching (legacy)"
     },
@@ -712,11 +743,12 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "tree_3d_realistic": {
         "axiom": "FA",
         "rules": {
-            "A": "F[&+B][&-B][&B]FA",
-            "B": "F[+B][-B]",
+            "A": "F[&+B]//[&-B]//[&B]//FA",
+            "B": "F[+B]/[-B]",
             "F": "FF"
         },
         "angle": 25,
+        "roll_angle": 137.5,
         "iterations": 4,
         "tropism_strength": 0.15,
         "description": "Realistic 3D tree with gravitropism (legacy)"
@@ -725,23 +757,23 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     "spiral_plant_3d": {
         "axiom": "A",
         "rules": {
-            "A": "F[+L]/A",
-            "L": "[&FF]"
+            "A": "F[&+L]/A",
+            "L": "[+F][-F]"
         },
         "angle": 35,
         "roll_angle": 137.5,
-        "iterations": 8,
+        "iterations": 12,
         "description": "Phyllotactic spiral plant (legacy)"
     },
     
     "fern_3d": {
         "axiom": "X",
         "rules": {
-            "X": "F[+X][-X]/X",
+            "X": "F[&+X]//[&-X]//X",
             "F": "FF"
         },
         "angle": 25,
-        "roll_angle": 180,
+        "roll_angle": 137.5,
         "iterations": 5,
         "description": "3D fern with alternating fronds (legacy)"
     },
@@ -887,7 +919,7 @@ def get_preset_info(name: str) -> str:
         f"Preset: {name}",
         f"  Axiom: {preset['axiom']}",
         f"  Rules: {preset['rules']}",
-        f"  Angle: {preset['angle']}°",
+        f"  Angle: {preset['angle']}Â°",
         f"  Iterations: {preset['iterations']}"
     ]
     
@@ -897,7 +929,7 @@ def get_preset_info(name: str) -> str:
     if preset.get('is_3d'):
         info_lines.append("  Type: 3D")
         if 'roll_angle' in preset:
-            info_lines.append(f"  Roll Angle: {preset['roll_angle']}°")
+            info_lines.append(f"  Roll Angle: {preset['roll_angle']}Â°")
         if 'tropism_strength' in preset:
             info_lines.append(f"  Tropism Strength: {preset['tropism_strength']}")
         if 'width_decay' in preset:
@@ -912,7 +944,238 @@ def get_preset_info(name: str) -> str:
 
 # Key biological constants for reference
 GOLDEN_ANGLE = 137.5077  # Optimal phyllotaxis angle
-LEONARDO_WIDTH_DECAY = 0.707  # √2⁻¹ - preserves cross-sectional area
+LEONARDO_WIDTH_DECAY = 0.707  # âˆš2â»Â¹ - preserves cross-sectional area
 HONDA_BRANCHING_ANGLE = 18.95  # Honda's optimal angle
 HONDA_DIVERGENCE_D1 = 94.74  # Honda's first divergence angle
 HONDA_DIVERGENCE_D2 = 132.63  # Honda's second divergence angle
+
+# =============================================================================
+# PARAMETRIC PRESETS - ABOP Advanced Features
+# =============================================================================
+
+PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
+    # =========================================================================
+    # GROWING TREES - Continuous segment elongation
+    # =========================================================================
+    "growing_tree_param": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) : l < 5 -> !(w)F(l)[+A(l*R1,w*WR)][-A(l*R1,w*WR)]",
+            "A(l,w) : l >= 5 -> !(w)F(l)",
+            "F(l) -> F(l*1.15)",
+        ],
+        "constants": {"R1": 0.9, "WR": 0.707},
+        "angle": 35,
+        "iterations": 12,
+        "description": "Tree with continuous growth and Leonardo's rule"
+    },
+    
+    "parametric_bush": {
+        "type": "parametric",
+        "axiom": "A(1,5)",
+        "productions": [
+            "A(l,w) : l > 0 -> !(w)F(l)[+A(l*0.7,w*0.7)][-A(l*0.7,w*0.7)][A(l*0.8,w*0.8)]",
+        ],
+        "constants": {},
+        "angle": 25.7,
+        "iterations": 6,
+        "description": "Parametric bush with variable segment lengths"
+    },
+    
+    # =========================================================================
+    # STOCHASTIC PLANTS - Natural variation
+    # =========================================================================
+    "stochastic_bush_abop": {
+        "type": "parametric",
+        "axiom": "F",
+        "productions": [
+            {"rule": "F -> F[+F]F[-F]F", "probability": 0.33},
+            {"rule": "F -> F[+F]F", "probability": 0.33},
+            {"rule": "F -> F[-F]F", "probability": 0.34},
+        ],
+        "angle": 25.7,
+        "iterations": 5,
+        "description": "Stochastic branching - ABOP Figure 1.27"
+    },
+    
+    "stochastic_tree": {
+        "type": "parametric",
+        "axiom": "F",
+        "productions": [
+            {"rule": "F -> F[+F][-F]F", "probability": 0.4},
+            {"rule": "F -> F[+F]F", "probability": 0.3},
+            {"rule": "F -> F[-F]F", "probability": 0.3},
+        ],
+        "angle": 30,
+        "iterations": 6,
+        "description": "Stochastic tree with natural variation"
+    },
+    
+    # =========================================================================
+    # DEVELOPMENTAL LEAVES - Using polygon notation
+    # =========================================================================
+    "developmental_leaf": {
+        "type": "parametric",
+        "axiom": "[A(0)][B(0)]",
+        "productions": [
+            # Left lobe: grows outward, creates wedge polygons
+            "A(n) : n < 6 -> F{.+F.-F.}A(n+1)",
+            # Right lobe: mirror image
+            "B(n) : n < 6 -> F{.-F.+F.}B(n+1)",
+            # Terminal
+            "A(n) : n >= 6 -> F",
+            "B(n) : n >= 6 -> F",
+        ],
+        "angle": 30,
+        "iterations": 6,
+        "description": "Cordate leaf with polygon filling - creates wedge-shaped polygons"
+    },
+    
+    "simple_polygon_leaf": {
+        "type": "parametric", 
+        "axiom": "A",
+        "productions": [
+            # Simple triangular leaf shape
+            "A -> {.F.+F.+F.}",
+        ],
+        "angle": 120,
+        "iterations": 1,
+        "description": "Simple triangular polygon test"
+    },
+    
+    "growing_leaf": {
+        "type": "parametric",
+        "axiom": "A(1)",
+        "productions": [
+            "A(t) : t < 10 -> F(t){.+F(t).-..-F(t).+|+F(t).-..-.}A(t+1)",
+            "A(t) : t >= 10 -> F(t)",
+        ],
+        "constants": {},
+        "angle": 30,
+        "iterations": 10,
+        "description": "Growing leaf shape"
+    },
+    
+    # =========================================================================
+    # HONDA'S TREE MODEL - Research validated
+    # =========================================================================
+    "honda_tree_param": {
+        "type": "parametric",
+        "axiom": "A(100,20)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&B(l*r1,w*wr)]/[&B(l*r2,w*wr)]",
+            "B(l,w) -> !(w)F(l)[+B(l*r1,w*wr)][-B(l*r2,w*wr)]",
+        ],
+        "constants": {
+            "r1": 0.9, "r2": 0.7,
+            "wr": 0.707,
+        },
+        "angle": 45,
+        "roll_angle": 137.5,
+        "iterations": 10,
+        "is_3d": True,
+        "description": "Honda tree model - ABOP Chapter 2"
+    },
+    
+    # =========================================================================
+    # PHYLLOTAXIS PATTERNS - Golden angle
+    # =========================================================================
+    "sunflower_vogel": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(n) : n < 200 -> +(137.5)[f(2*sqrt(n)).]A(n+1)",
+        ],
+        "angle": 0,
+        "iterations": 200,
+        "description": "Sunflower head - Vogel's formula (ABOP Chapter 4)"
+    },
+    
+    "phyllotaxis_rosette": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(n) : n < 55 -> [&F(3)']/(137.5)A(n+1)",
+        ],
+        "angle": 30,
+        "roll_angle": 137.5,
+        "iterations": 55,
+        "is_3d": True,
+        "description": "Rosette pattern with golden angle phyllotaxis"
+    },
+    
+    # =========================================================================
+    # SIGNAL-BASED GROWTH
+    # =========================================================================
+    "signal_tree": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(s) : s == 0 -> F[-B(1)]F[+B(1)]A(0)",
+            "B(s) : s > 0 -> F[-B(s-1)][+B(s-1)]",
+            "B(s) : s == 0 -> B(0)",
+        ],
+        "constants": {},
+        "angle": 45,
+        "iterations": 8,
+        "description": "Tree with signal-based branch activation"
+    },
+    
+    # =========================================================================
+    # PARAMETRIC 3D PLANTS
+    # =========================================================================
+    "parametric_conifer_3d": {
+        "type": "parametric",
+        "axiom": "T(1,50)",
+        "productions": [
+            "T(age,l) : age < 10 -> F(l)[&B(l*0.4)]/(137.5)T(age+1,l*0.95)",
+            "B(l) -> F(l)[+B(l*0.7)][-B(l*0.7)]",
+        ],
+        "constants": {},
+        "angle": 30,
+        "roll_angle": 137.5,
+        "iterations": 10,
+        "is_3d": True,
+        "description": "Parametric conifer with golden angle"
+    },
+    
+    "parametric_palm_3d": {
+        "type": "parametric",
+        "axiom": "T(0,10)",
+        "productions": [
+            "T(n,l) : n < 8 -> F(l)T(n+1,l*0.95)",
+            "T(n,l) : n >= 8 -> F(l)W(0)",
+            "W(a) : a < 5 -> [&&&F(30)[+F(10)][-F(10)]F(10)]/(72)W(a+1)",
+        ],
+        "constants": {},
+        "angle": 35,
+        "roll_angle": 72,
+        "iterations": 15,
+        "is_3d": True,
+        "description": "Parametric palm tree with whorled fronds"
+    },
+}
+
+
+def get_parametric_preset(name: str):
+    """
+    Get a parametric preset by name.
+    
+    Args:
+        name: Preset name (case-insensitive)
+        
+    Returns:
+        Preset dictionary or None if not found
+    """
+    name_lower = name.lower()
+    if name_lower in PARAMETRIC_PRESETS:
+        preset = PARAMETRIC_PRESETS[name_lower].copy()
+        preset['is_parametric'] = True
+        return preset
+    return None
+
+
+def list_parametric_presets():
+    """Return list of available parametric preset names."""
+    return sorted(PARAMETRIC_PRESETS.keys())
