@@ -355,159 +355,183 @@ PRESETS: Dict[str, Dict[str, Any]] = {
 
 PRESETS_3D: Dict[str, Dict[str, Any]] = {
     # =========================================================================
-    # REALISTIC 3D TREES
+    # REALISTIC 3D TREES - Based on ABOP Chapter 2 with practical fixes
     # =========================================================================
+    
+    # -------------------------------------------------------------------------
+    # OAK - Sympodial structure (ABOP Fig 2.7)
+    # Both daughter branches fork from parent (no single dominant trunk)
+    # Creates wide spreading crown
+    # -------------------------------------------------------------------------
     "oak_3d": {
-        "axiom": "FFA",
+        "axiom": "FFFFA",
         "rules": {
-            # 4 branches per whorl, each purely outward (&), roll 90° between
-            "A": "[&B]/[&B]/[&B]/[&B]/FA",
-            # Secondary branches subdivide
-            "B": "FF[&+C][&-C]",
-            "C": "FF[+C][-C]",
-            "F": "F"
+            # Fork into two branches at 180° apart, each continues forking
+            # & pitches down (away from trunk), / rotates around trunk
+            "A": "F[&B]/(180)[&B]",
+            # Sub-branches: grow, fork into two, $ keeps branches horizontal
+            "B": "FF[+$B][-$B]",
         },
-        "angle": 35,
-        "roll_angle": 90,  # 360/4 = 90° for 4-fold symmetry
-        "iterations": 6,
-        "tropism_strength": 0.03,
-        "tropism_direction": [0, 1, 0],
-        "width_decay": 0.68,
-        "length_decay": 0.70,
-        "stochastic": 0.18,
-        "description": "Dense spreading oak with full 3D crown"
+        "angle": 35,  # Symmetric angles create dome shape (ABOP Table 2.2d)
+        "roll_angle": 180,
+        "iterations": 9,
+        "tropism_strength": 0.0,  # Oak doesn't droop significantly
+        "width_decay": 0.707,  # Leonardo's rule
+        "length_decay": 0.80,  # Slightly shorter branches for density
+        "stochastic": 0.15,  # Natural variation
+        "description": "Spreading oak - ABOP sympodial (Fig 2.7d)"
     },
     
+    # -------------------------------------------------------------------------
+    # MAPLE - Sympodial with opposite/decussate branching
+    # Similar to oak but branches at 90° rotation each level
+    # -------------------------------------------------------------------------
     "maple_3d": {
-        "axiom": "FFA",
+        "axiom": "FFFFA",
         "rules": {
-            # Opposite branching - branches on opposite sides, rotate 90° each level
-            "A": "[&B]/[&B]/A",
-            "B": "FF[&+C][&-C]",
-            "C": "F[+C][-C]"
+            # Fork into two opposite branches
+            "A": "F[&B]/(180)[&B]",
+            # Sub-branches fork, alternating sides
+            "B": "FF[+$C][-$C]",
+            "C": "F[+$B][-$B]"
         },
-        "angle": 35,
-        "roll_angle": 90,  # Decussate phyllotaxis
-        "iterations": 7,
-        "tropism_strength": 0.05,
-        "tropism_direction": [0, 1, 0],
-        "width_decay": 0.62,
-        "length_decay": 0.65,
-        "stochastic": 0.15,
-        "description": "Maple with dense opposite branching"
+        "angle": 40,
+        "roll_angle": 90,  # 90° rotation between levels (decussate)
+        "iterations": 8,
+        "tropism_strength": 0.0,
+        "width_decay": 0.707,
+        "length_decay": 0.78,
+        "stochastic": 0.12,
+        "description": "Maple - sympodial with decussate branching"
     },
     
+    # -------------------------------------------------------------------------
+    # BIRCH - Monopodial (ABOP Fig 2.6)
+    # Single dominant trunk with lateral branches
+    # FIXED: Branch develops BEFORE trunk continues (avoids bare top)
+    # -------------------------------------------------------------------------
     "birch_3d": {
         "axiom": "FFFFA",
         "rules": {
-            # 3 branches per whorl for asymmetric natural look
-            "A": "[&B]/[&B]/[&B]/FA",
-            "B": "F[&+C][&-C]",
-            "C": "F[+C][-C]"
+            # Trunk: branch first, then grow trunk segment, then continue
+            # This ensures branches develop at same rate as trunk
+            "A": "[&B]/FA",
+            # Branches fork on both sides
+            "B": "F[-B][+B]",
         },
         "angle": 35,
-        "roll_angle": 120,  # 360/3 for 3-fold
-        "iterations": 6,
-        "tropism_strength": 0.04,
-        "tropism_direction": [0, 1, 0],
-        "width_decay": 0.58,
-        "length_decay": 0.72,
-        "stochastic": 0.20,
-        "description": "Delicate birch with fine branching"
+        "roll_angle": 137.5,  # Golden angle divergence
+        "iterations": 9,
+        "tropism_strength": 0.08,  # Slight natural droop
+        "tropism_direction": [0, -1, 0],
+        "width_decay": 0.65,
+        "length_decay": 0.85,
+        "stochastic": 0.12,
+        "description": "Birch - ABOP monopodial (Fig 2.6)"
     },
     
+    # -------------------------------------------------------------------------
+    # WILLOW - Monopodial with drooping branches
+    # FIXED: Branches start HORIZONTAL (single &), tropism bends them down
+    # Not too much droop to avoid going underground
+    # -------------------------------------------------------------------------
     "willow_3d": {
-        "axiom": "FFFFFFA",  # Taller trunk
+        "axiom": "FFFFFFA",  # Tall trunk
         "rules": {
-            # Branches that droop - use pitch down (&) heavily
-            "A": "[&&B]///[&&B]///[&&B]///[&&B]///A",
-            # Drooping branches that cascade down
-            "B": "F[&+B][&-B]&F&F&FB",
+            # Trunk: emit branch at moderate angle (near horizontal)
+            "A": "[&B]/FA",
+            # Branches grow outward and cascade, creating curtain effect
+            "B": "F[+B][-B]FB",
         },
-        "angle": 15,  # Narrow angle for cascading effect
-        "roll_angle": 90,  # 4 branches per whorl
-        "iterations": 6,
-        "tropism_strength": 0.35,
-        "tropism_direction": [0, -1, 0],  # DROOP DOWN!
+        "angle": 60,  # Nearly horizontal start (90-60=30° from horizontal)
+        "roll_angle": 137.5,
+        "iterations": 8,
+        "tropism_strength": 0.20,  # Moderate droop (not too extreme)
+        "tropism_direction": [0, -1, 0],  # Bend downward
         "width_decay": 0.75,
         "length_decay": 0.88,
-        "stochastic": 0.10,
-        "description": "Weeping willow with drooping branches"
+        "stochastic": 0.08,
+        "description": "Weeping willow - branches start horizontal, droop via tropism"
     },
     
+    # -------------------------------------------------------------------------
+    # PINE - Honda's Ternary Model (ABOP Fig 2.8a)
+    # Three branches per node, specific divergence angles
+    # -------------------------------------------------------------------------
     "pine_honda": {
-        "axiom": "FFFA",
+        "axiom": "FFFFA",
         "rules": {
-            # 3 branches per whorl (ternary), spiral up trunk
-            "A": "[&B]/[&B]/[&B]/FA",
-            "B": "FF[+C][-C]",
-            "C": "F[+C][-C]"
+            # Ternary: three branches per whorl with Honda's angles
+            "A": "[&B]/(94.74)[&B]/(132.63)[&B]/(132.63)FA",
+            "B": "FF[-B][+B]",
         },
-        "angle": 25,
-        "roll_angle": 120,  # 360/3 for 3-fold symmetry
+        "angle": 25,  # Branch angle from trunk
+        "roll_angle": 94.74,  # Honda's first divergence
         "iterations": 7,
-        "tropism_strength": 0.08,
-        "tropism_direction": [0, 1, 0],
-        "width_decay": 0.62,
-        "length_decay": 0.78,
-        "description": "Pine tree with whorled branches"
+        "tropism_strength": 0.12,
+        "tropism_direction": [0, -1, 0],
+        "width_decay": 0.65,
+        "length_decay": 0.85,
+        "description": "Pine - Honda's ternary model (ABOP Fig 2.8a)"
     },
     
+    # -------------------------------------------------------------------------
+    # CONIFER - Whorled branches with golden angle
+    # Multiple branches per level in a spiral pattern
+    # -------------------------------------------------------------------------
     "conifer_realistic": {
         "axiom": "FFFFT",
         "rules": {
-            # Whorled branches, 4 per level
-            "T": "[&L]/[&L]/[&L]/[&L]/FT",
+            # Four branches per whorl, golden angle spiral up trunk
+            "T": "[&L]/(137.5)[&L]/(137.5)[&L]/(137.5)[&L]/(137.5)FT",
             "L": "FF[-F][+F]"
         },
-        "angle": 30,
-        "roll_angle": 90,
-        "iterations": 9,
-        "tropism_strength": 0.05,
-        "tropism_direction": [0, 1, 0],
+        "angle": 25,
+        "roll_angle": 137.5,
+        "iterations": 8,
+        "tropism_strength": 0.10,
+        "tropism_direction": [0, -1, 0],
         "width_decay": 0.70,
-        "length_decay": 0.90,
-        "description": "Conifer with whorled branches"
+        "length_decay": 0.88,
+        "description": "Conifer - whorled branches, golden angle"
     },
     
     # =========================================================================
-    # TREE ARCHITECTURE TYPES
+    # TREE ARCHITECTURE TYPES - ABOP Reference Models
     # =========================================================================
+    
     "monopodial_tree": {
-        "axiom": "FFFA",
+        # ABOP Figure 2.6 - Single dominant trunk with laterals
+        "axiom": "FFFFA",
         "rules": {
-            # Single dominant trunk with radial branches
-            "A": "[&B]/[&B]/[&B]/FA",
-            "B": "F[+C][-C]",
-            "C": "F[+C][-C]"
+            "A": "[&B]/FA",  # Branch, rotate, grow trunk, continue
+            "B": "F[-B][+B]"  # Branches fork
         },
-        "angle": 40,
-        "roll_angle": 120,
-        "iterations": 6,
+        "angle": 45,
+        "roll_angle": 137.5,
+        "iterations": 9,
         "tropism_strength": 0.05,
-        "tropism_direction": [0, 1, 0],
-        "width_decay": 0.65,
-        "length_decay": 0.78,
-        "description": "Monopodial tree - single dominant trunk (like pine)"
+        "tropism_direction": [0, -1, 0],
+        "width_decay": 0.707,
+        "length_decay": 0.85,
+        "description": "Monopodial - ABOP Fig 2.6 (single trunk, laterals)"
     },
     
     "sympodial_tree": {
-        "axiom": "FFA",
+        # ABOP Figure 2.7 - Bifurcating branches, no single trunk
+        "axiom": "FFFFA",
         "rules": {
-            # Bifurcating main axis
-            "A": "[&+B]/[&-B]",
-            "B": "FF[&+C][&-C]B",
-            "C": "F[+C][-C]"
+            "A": "F[&B]/(180)[&B]",  # Fork into two
+            "B": "FF[+$B][-$B]"  # Each branch forks again
         },
-        "angle": 30,
-        "roll_angle": 90,
-        "iterations": 5,
-        "tropism_strength": 0.08,
-        "tropism_direction": [0, 1, 0],
-        "width_decay": 0.70,
-        "length_decay": 0.75,
-        "stochastic": 0.12,
-        "description": "Sympodial tree - bifurcating branches"
+        "angle": 35,
+        "roll_angle": 180,
+        "iterations": 9,
+        "tropism_strength": 0.0,
+        "width_decay": 0.707,
+        "length_decay": 0.82,
+        "stochastic": 0.10,
+        "description": "Sympodial - ABOP Fig 2.7 (forking branches)"
     },
     
     # =========================================================================
