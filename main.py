@@ -259,7 +259,7 @@ Available parametric presets: """ + ", ".join(list_parametric_presets())
     turtle_group.add_argument("--length-decay", type=float, default=0.9,
                              help="Length multiplier per depth (default: 0.9)")
     turtle_group.add_argument("--stochastic", type=float, default=0.0,
-                             help="Random angle variation (0.1 = ±10%%, default: 0)")
+                             help="Random angle variation (0.1 = Â±10%%, default: 0)")
     
     # === 3D parameters ===
     three_d_group = parser.add_argument_group('3D Parameters')
@@ -317,7 +317,7 @@ Available parametric presets: """ + ", ".join(list_parametric_presets())
             print(f"  {name}:")
             print(f"    Axiom: {preset['axiom']}")
             print(f"    Rules: {preset['rules']}")
-            print(f"    Angle: {preset['angle']}°")
+            print(f"    Angle: {preset['angle']}Â°")
             print(f"    Iterations: {preset['iterations']}")
             if 'description' in preset:
                 print(f"    Description: {preset['description']}")
@@ -327,9 +327,9 @@ Available parametric presets: """ + ", ".join(list_parametric_presets())
         for name, preset in PRESETS_3D.items():
             print(f"  {name}:")
             print(f"    Axiom: {preset['axiom']}")
-            print(f"    Angle: {preset['angle']}°")
+            print(f"    Angle: {preset['angle']}Â°")
             if 'roll_angle' in preset:
-                print(f"    Roll Angle: {preset['roll_angle']}°")
+                print(f"    Roll Angle: {preset['roll_angle']}Â°")
             if 'description' in preset:
                 print(f"    Description: {preset['description']}")
             print()
@@ -692,14 +692,31 @@ Available parametric presets: """ + ", ".join(list_parametric_presets())
         pov_files = []
         terminal_indices = set(controller.get_terminal_segments(segments))
         
+        # Calculate polygon visibility based on frame (same logic as 2D)
+        num_polygons = len(polygons) if polygons else 0
+        
         for frame in range(args.frames):
             frame_segments = controller.get_frame_segments(segments, frame)
             frame_terminal = [seg for seg in frame_segments if seg.index in terminal_indices]
             
+            # Animate polygons: reveal based on frame progress
+            frame_polygons = None
+            if render_polygons and polygons:
+                frame_progress = frame / (args.frames - 1) if args.frames > 1 else 1.0
+                growth_period = 0.8  # Use 80% of animation for growth
+                
+                frame_polygons = []
+                for poly in polygons:
+                    poly_progress = poly.index / num_polygons if num_polygons > 0 else 0
+                    start_time = poly_progress * growth_period
+                    if frame_progress >= start_time:
+                        frame_polygons.append(poly)
+            
             pov_file = generator.generate_frame(
                 frame_segments, bbox, frame, max_depth,
                 terminal_segments=frame_terminal,
-                total_frames=args.frames
+                total_frames=args.frames,
+                polygons=frame_polygons
             )
             pov_files.append(pov_file)
             pov_progress(frame + 1, args.frames)
