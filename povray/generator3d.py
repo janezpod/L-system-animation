@@ -220,7 +220,24 @@ union {{
         if length < 0.001:
             return ""
         
-        r, g, b = depth_to_color_3d(segment.depth, max_depth)
+        # Color palette for segments (matching polygon palette)
+        COLOR_PALETTE = [
+            None,                     # 0: use depth-based color
+            (1.00, 0.85, 0.10),       # 1: sunflower yellow
+            (0.45, 0.30, 0.15),       # 2: brown (seeds)
+            (0.85, 0.15, 0.15),       # 3: red
+            (1.00, 0.60, 0.70),       # 4: pink
+            (1.00, 0.55, 0.10),       # 5: orange
+            (0.70, 0.40, 0.80),       # 6: purple
+            (0.95, 0.95, 0.95),       # 7: white
+        ]
+        
+        # Check if segment has color_index set
+        color_index = getattr(segment, 'color_index', 0)
+        if color_index > 0 and color_index < len(COLOR_PALETTE) and COLOR_PALETTE[color_index]:
+            r, g, b = COLOR_PALETTE[color_index]
+        else:
+            r, g, b = depth_to_color_3d(segment.depth, max_depth)
         
         # Calculate radius
         radius = base_radius * segment.width
@@ -317,6 +334,96 @@ union {{
             r=r, g=g, b=b
         )
     
+    def _polygon_to_povray_3d(
+        self,
+        vertices: List[Tuple[float, float, float]],
+        color: Tuple[float, float, float]
+    ) -> str:
+        """
+        Generate POV-Ray polygon from 3D vertices for leaf/petal shapes.
+        
+        Args:
+            vertices: List of (x, y, z) vertex coordinates
+            color: RGB color tuple
+            
+        Returns:
+            POV-Ray SDL string for filled polygon
+        """
+        if len(vertices) < 3:
+            return ""
+        
+        r, g, b = color
+        
+        lines = [f"    polygon {{ {len(vertices) + 1},"]
+        for x, y, z in vertices:
+            lines.append(f"        <{x:.4f}, {y:.4f}, {z:.4f}>,")
+        # Close polygon
+        lines.append(f"        <{vertices[0][0]:.4f}, {vertices[0][1]:.4f}, {vertices[0][2]:.4f}>")
+        lines.append(f"        pigment {{ rgb <{r:.4f}, {g:.4f}, {b:.4f}> }}")
+        lines.append(f"        finish {{ ambient 0.4 diffuse 0.6 }}")
+        lines.append("    }")
+        
+        return '\n'.join(lines)
+    
+    def _render_polygons_list_3d(
+        self,
+        polygons: List,  # List[Polygon3D] from interpreter3d
+        max_depth: int
+    ) -> List[str]:
+        """
+        Render a list of 3D polygons to POV-Ray geometry strings.
+        
+        Args:
+            polygons: List of Polygon3D objects from turtle interpreter
+            max_depth: Maximum depth for color calculation
+            
+        Returns:
+            List of POV-Ray SDL strings for each polygon
+        """
+        geometry_lines = []
+        
+        # Color palette for different plant parts
+        # color_index 0 = leaf green
+        # color_index 1 = yellow (petals)
+        # color_index 2 = brown (seeds/center)
+        # color_index 3 = red (flowers)
+        # color_index 4 = pink
+        # color_index 5 = orange
+        COLOR_PALETTE = [
+            (0.30, 0.55, 0.20),  # 0: leaf green
+            (1.00, 0.85, 0.10),  # 1: sunflower yellow
+            (0.45, 0.30, 0.15),  # 2: brown (seeds)
+            (0.85, 0.15, 0.15),  # 3: red
+            (1.00, 0.60, 0.70),  # 4: pink
+            (1.00, 0.55, 0.10),  # 5: orange
+            (0.70, 0.40, 0.80),  # 6: purple
+            (0.95, 0.95, 0.95),  # 7: white
+        ]
+        
+        for poly in polygons:
+            if not hasattr(poly, 'vertices') or len(poly.vertices) < 3:
+                continue
+            
+            # Get depth and color_index
+            depth = getattr(poly, 'depth', 0)
+            color_index = getattr(poly, 'color_index', 0)
+            
+            # Use color palette if color_index is set, otherwise depth-based green
+            if color_index > 0 and color_index < len(COLOR_PALETTE):
+                r, g, b = COLOR_PALETTE[color_index]
+            else:
+                # Default depth-based leaf green
+                t = depth / max_depth if max_depth > 0 else 0
+                r = 0.25 + t * 0.15
+                g = 0.50 + t * 0.25
+                b = 0.15 + t * 0.10
+            
+            pov_geom = self._polygon_to_povray_3d(poly.vertices, (r, g, b))
+            if pov_geom:
+                geometry_lines.append(pov_geom)
+        
+        return geometry_lines
+    
     def generate_scene(
         self,
         segments: List[Segment3D],
@@ -325,7 +432,8 @@ union {{
         max_depth: Optional[int] = None,
         terminal_segments: Optional[List[Segment3D]] = None,
         frame: int = 0,
-        total_frames: int = 1
+        total_frames: int = 1,
+        polygons: Optional[List] = None
     ) -> str:
         """
         Generate a POV-Ray 3D scene file.
@@ -338,12 +446,18 @@ union {{
             terminal_segments: Segments for leaf rendering
             frame: Current frame number (for camera animation)
             total_frames: Total frames (for camera animation)
+            polygons: List of Polygon3D objects for leaf/petal rendering
             
         Returns:
             Full path to generated .pov file
         """
         if max_depth is None:
             max_depth = max((seg.depth for seg in segments), default=0)
+            # Also consider polygon depths
+            if polygons:
+                polygon_depths = [getattr(p, 'depth', 0) for p in polygons]
+                if polygon_depths:
+                    max_depth = max(max_depth, max(polygon_depths))
         
         padded_bbox = bbox.with_padding_percent(self.padding_percent)
         center = padded_bbox.center
@@ -368,8 +482,8 @@ union {{
                 cam_height=cam_height, cam_width=cam_width
             )
         
-        # Calculate base radius
-        base_radius = scene_scale * 0.004
+        # Calculate base radius - increased for more visible ABOP-style branches
+        base_radius = scene_scale * 0.010
         
         # Generate geometry
         geometry_lines = []
@@ -385,6 +499,11 @@ union {{
                 if segment.length() > 0.1:
                     leaf_geom = self._leaf_to_povray(segment, max_depth, leaf_size)
                     geometry_lines.append(leaf_geom)
+        
+        # Render polygons (leaves/petals from { } notation)
+        if polygons:
+            polygon_geoms = self._render_polygons_list_3d(polygons, max_depth)
+            geometry_lines.extend(polygon_geoms)
         
         if not geometry_lines:
             geometry_lines.append("    sphere { <0, 0, 0>, 0.001 pigment { rgb <1, 1, 1> } }")
@@ -425,7 +544,8 @@ union {{
         frame_number: int,
         max_depth: Optional[int] = None,
         terminal_segments: Optional[List[Segment3D]] = None,
-        total_frames: int = 100
+        total_frames: int = 100,
+        polygons: Optional[List] = None
     ) -> str:
         """
         Generate a single animation frame.
@@ -437,6 +557,7 @@ union {{
             max_depth: Maximum depth for coloring
             terminal_segments: Terminal segments for leaves
             total_frames: Total frames for camera animation
+            polygons: Polygon objects for leaf/petal rendering
             
         Returns:
             Full path to generated .pov file
@@ -444,5 +565,59 @@ union {{
         filename = f"frame_{frame_number:05d}.pov"
         return self.generate_scene(
             segments, bbox, filename, max_depth, terminal_segments,
-            frame=frame_number, total_frames=total_frames
+            frame=frame_number, total_frames=total_frames,
+            polygons=polygons
+        )
+    
+    def generate_frame_enhanced(
+        self,
+        segments: List[Segment3D],
+        bbox: BoundingBox3D,
+        frame_number: int,
+        max_depth: Optional[int],
+        terminal_segments: Optional[List[Segment3D]] = None,
+        polygons: Optional[List] = None
+    ) -> str:
+        """
+        Enhanced frame generation with polygon support.
+        
+        This method is called when --render-polygons is used without --animate-camera.
+        Provides full polygon rendering for ABOP-style leaves and petals.
+        
+        Args:
+            segments: Segments to render
+            bbox: Bounding box for consistent framing
+            frame_number: Frame number for filename
+            max_depth: Maximum depth for coloring
+            terminal_segments: Terminal segments for leaves
+            polygons: Polygon objects for leaf/petal rendering
+            
+        Returns:
+            Full path to generated .pov file
+        """
+        filename = f"frame_{frame_number:05d}.pov"
+        return self.generate_scene(
+            segments, bbox, filename, max_depth, terminal_segments,
+            frame=frame_number, total_frames=1,  # No camera animation in enhanced mode
+            polygons=polygons
+        )
+    
+    def generate_scene_enhanced(
+        self,
+        segments: List[Segment3D],
+        bbox: BoundingBox3D,
+        filename: str,
+        max_depth: Optional[int] = None,
+        terminal_segments: Optional[List[Segment3D]] = None,
+        polygons: Optional[List] = None
+    ) -> str:
+        """
+        Enhanced scene generation - wrapper for hasattr() check in main.py.
+        
+        This method exists to make hasattr(generator, 'generate_scene_enhanced')
+        return True, enabling the polygon rendering code path.
+        """
+        return self.generate_scene(
+            segments, bbox, filename, max_depth, terminal_segments,
+            polygons=polygons
         )

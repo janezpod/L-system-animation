@@ -487,9 +487,10 @@ union {{
             cam_width = cam_height * aspect_ratio
         
         # Calculate base radius proportional to scene size
+        # Increased from 0.003 to 0.008 for more visible ABOP-style branches
         scene_scale = max(cam_width, cam_height)
         self._scene_scale = scene_scale
-        base_radius = scene_scale * 0.003
+        base_radius = scene_scale * 0.008
         
         # Generate geometry for all segments
         geometry_lines = []
@@ -625,9 +626,10 @@ union {{
             cam_width = cam_height * aspect_ratio
         
         # Calculate base radius proportional to scene size
+        # Increased from 0.003 to 0.008 for more visible ABOP-style branches
         scene_scale = max(cam_width, cam_height)
         self._scene_scale = scene_scale
-        base_radius = scene_scale * 0.003
+        base_radius = scene_scale * 0.008
         
         # Generate geometry for all segments
         geometry_lines = []
