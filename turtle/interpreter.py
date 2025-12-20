@@ -266,6 +266,10 @@ class TurtleInterpreter:
                 state.x += state.step_size * math.cos(rad)
                 state.y += state.step_size * math.sin(rad)
                 
+                # In ABOP polygon mode, f movements automatically add vertices
+                if state.in_polygon:
+                    state.polygon_vertices.append((state.x, state.y))
+                
             elif char == '+':
                 # Turn left (counter-clockwise)
                 state.angle += self.angle_delta
@@ -273,6 +277,10 @@ class TurtleInterpreter:
             elif char == '-':
                 # Turn right (clockwise)
                 state.angle -= self.angle_delta
+                
+            elif char == '|':
+                # Turn around 180 degrees (ABOP symbol)
+                state.angle += 180
                 
             elif char == '[':
                 # Push state onto stack and increase depth
@@ -309,9 +317,9 @@ class TurtleInterpreter:
                 state.color_index += 1
                 
             elif char == '{':
-                # Start polygon mode (don't add vertex - use . for that)
+                # Start polygon mode - add current position as first vertex (ABOP style)
                 state.in_polygon = True
-                state.polygon_vertices = []
+                state.polygon_vertices = [(state.x, state.y)]
                 
             elif char == '}':
                 # End polygon mode

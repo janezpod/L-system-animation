@@ -296,13 +296,13 @@ class TurtleState3D:
             gravity = np.array(gravity)
             # L should be orthogonal to H
             # Project L onto the horizontal plane (perpendicular to gravity)
-            # New L = H × gravity (normalized)
+            # New L = H Ã— gravity (normalized)
             new_L = np.cross(self.H, -gravity)
             if np.linalg.norm(new_L) > 1e-6:
                 self.L = new_L / np.linalg.norm(new_L)
                 self.U = np.cross(self.H, self.L)
         else:
-            # H × gravity
+            # H Ã— gravity
             new_L = _cross_py(self.H, [-g for g in gravity])
             length = math.sqrt(sum(x*x for x in new_L))
             if length > 1e-6:
@@ -349,7 +349,7 @@ def apply_tropism(heading, tropism_vector, elasticity: float = 0.2):
     """
     Bend heading toward tropism direction.
     
-    Uses the ABOP torque formula: α = e|H × T|
+    Uses the ABOP torque formula: Î± = e|H Ã— T|
     
     Args:
         heading: Current heading vector
@@ -360,7 +360,7 @@ def apply_tropism(heading, tropism_vector, elasticity: float = 0.2):
         New heading vector bent toward tropism
     """
     if HAS_NUMPY:
-        # H' = normalize(H + e * (T - (T·H)H))
+        # H' = normalize(H + e * (T - (TÂ·H)H))
         dot = np.dot(tropism_vector, heading)
         bent = heading + elasticity * (tropism_vector - dot * heading)
         return bent / np.linalg.norm(bent)
@@ -395,7 +395,7 @@ class TurtleInterpreter3D:
     - ^: Pitch up
     - /: Roll right
     - \\: Roll left
-    - |: Turn around (180°)
+    - |: Turn around (180Â°)
     
     Stack operations:
     - [: Push state (start branch)
@@ -441,8 +441,8 @@ class TurtleInterpreter3D:
             width_decrement: Multiplier for ! symbol (explicit width control)
             tropism_vector: Direction of environmental stimulus
             tropism_strength: How strongly to bend toward tropism
-            angle_variance: Random variance in angles (0.1 = ±10%)
-            length_variance: Random variance in length (0.1 = ±10%)
+            angle_variance: Random variance in angles (0.1 = Â±10%)
+            length_variance: Random variance in length (0.1 = Â±10%)
             random_seed: Seed for reproducible randomness
         """
         self.angle_delta = angle_delta
@@ -560,6 +560,13 @@ class TurtleInterpreter3D:
                 else:
                     state.position = [state.position[j] + step * state.H[j] for j in range(3)]
                 
+                # In ABOP polygon mode, f movements automatically add vertices
+                if state.in_polygon:
+                    if HAS_NUMPY:
+                        state.polygon_vertices.append(tuple(state.position))
+                    else:
+                        state.polygon_vertices.append(tuple(state.position))
+                
             elif char == '+':
                 # Turn left (positive yaw)
                 state.rotate_yaw(self._vary_angle(self.angle_delta))
@@ -627,9 +634,12 @@ class TurtleInterpreter3D:
                 state.color_index += 1
                 
             elif char == '{':
-                # Start polygon mode (don't add vertex - use . for that)
+                # Start polygon mode - add current position as first vertex (ABOP style)
                 state.in_polygon = True
-                state.polygon_vertices = []
+                if HAS_NUMPY:
+                    state.polygon_vertices = [tuple(state.position)]
+                else:
+                    state.polygon_vertices = [tuple(state.position)]
                     
             elif char == '}':
                 # End polygon mode
