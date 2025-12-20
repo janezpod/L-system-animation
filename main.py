@@ -36,7 +36,7 @@ def print_progress(current: int, total: int, prefix: str = "", width: int = 40):
     """Print a progress bar."""
     percent = current / total
     filled = int(width * percent)
-    bar = "█" * filled + "░" * (width - filled)
+    bar = "#" * filled + "-" * (width - filled)
     print(f"\r{prefix} [{bar}] {current}/{total} ({percent*100:.1f}%)", end="", flush=True)
     if current >= total:
         print()
