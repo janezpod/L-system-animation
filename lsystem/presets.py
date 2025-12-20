@@ -1,634 +1,395 @@
 """
-Plant Presets
+L-System Plant Presets v2 - Complete Redesign
 
-Botanically accurate L-system plant definitions based on:
+FIXES:
+1. Removed all duplicates (oak/sympodial, honda/camera_orbit, etc.)
+2. Palm - Now has 8-12 realistic fronds with pinnate structure
+3. Sunflower - Dense Fibonacci spiral florets visible from above
+4. Phyllotaxis - Bowl-shaped to show golden angle spiral properly
+5. All trees have distinct silhouettes matching their species
+
+Based on:
 - "The Algorithmic Beauty of Plants" (Prusinkiewicz & Lindenmayer)
-- Honda's ternary tree model
-- Fibonacci phyllotaxis research
+- Honda tree model research
+- Fibonacci phyllotaxis patterns
+- Real botanical growth patterns
 
-Includes 2D and 3D preset collections with research-validated parameters.
+Author: JP's L-System Generator Project
 """
 
 from typing import Dict, Any, List
 
 # =============================================================================
-# 2D Plant Presets - Research Validated
+# 2D PRESETS
 # =============================================================================
 
-PRESETS: Dict[str, Dict[str, Any]] = {
+PRESETS_2D: Dict[str, Dict[str, Any]] = {
     # =========================================================================
-    # TREES - 2D
+    # ABOP Figure 1.24 - The Canonical Collection (Keep all - they're classics!)
     # =========================================================================
-    "tree_binary": {
-        "axiom": "F",
-        "rules": {"F": "FF-[-F+F+F]+[+F-F-F]"},
-        "angle": 22.5,
-        "iterations": 4,
-        "description": "Symmetric binary tree - ABOP Figure 1.24d"
-    },
-    "tree_elegant": {
-        "axiom": "X",
-        "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
-        "angle": 22.5,
-        "iterations": 5,
-        "description": "Elegant plant - ABOP Figure 1.24f (most beautiful 2D form)"
-    },
-    "tree_asymmetric": {
-        "axiom": "X",
-        "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
-        "angle": 20,
-        "iterations": 7,
-        "description": "Asymmetric branching tree - ABOP Figure 1.24e"
-    },
-    "tree_stochastic": {
+    "abop_1_24a": {
         "axiom": "F",
         "rules": {"F": "F[+F]F[-F]F"},
         "angle": 25.7,
         "iterations": 5,
-        "stochastic": 0.15,
-        "description": "Stochastic-style branching (use with --stochastic 0.15)"
+        "base_width": 1.5,
+        "description": "ABOP 1.24a - Classic edge-rewriting bush"
     },
-    "oak_2d": {
-        "axiom": "X",
-        "rules": {"X": "F[+X][-X]FX", "F": "FF"},
-        "angle": 35,
-        "iterations": 6,
-        "description": "Oak-like spreading crown"
-    },
-    "willow_2d": {
-        "axiom": "F",
-        "rules": {"F": "FF-[-F+F]+[+F-F-F]"},
-        "angle": 22.5,
-        "iterations": 5,
-        "description": "Weeping willow drooping branches"
-    },
-    
-    # Legacy aliases for backward compatibility
-    "tree": {
-        "axiom": "F",
-        "rules": {"F": "F[-F][+F]"},
-        "angle": 25,
-        "iterations": 5,
-        "description": "Simple binary tree (legacy)"
-    },
-    "tree2": {
-        "axiom": "X",
-        "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
-        "angle": 20,
-        "iterations": 5,
-        "description": "Alternate tree structure (legacy)"
-    },
-    "tree_oak": {
-        "axiom": "X",
-        "rules": {"X": "F[+X][-X]FX", "F": "FF"},
-        "angle": 30,
-        "iterations": 5,
-        "description": "Oak tree branching (legacy)"
-    },
-    "tree_willow": {
-        "axiom": "F",
-        "rules": {"F": "FF-[-F+F+F]+[+F-F-F]"},
-        "angle": 22.5,
-        "iterations": 4,
-        "description": "Weeping willow (legacy)"
-    },
-    "bonsai": {
-        "axiom": "F",
-        "rules": {"F": "FF[++F][-FF][+F][-F]"},
-        "angle": 30,
-        "iterations": 4,
-        "description": "Stylized bonsai tree"
-    },
-    "dragon_tree": {
-        "axiom": "X",
-        "rules": {"X": "F[+X][-X]F[+X]FX", "F": "FF"},
-        "angle": 25.7,
-        "iterations": 5,
-        "description": "Dragon tree branching pattern"
-    },
-    
-    # =========================================================================
-    # FERNS - 2D (Research Validated)
-    # =========================================================================
-    "fern_classic": {
-        "axiom": "X",
-        "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
-        "angle": 22.5,
-        "iterations": 5,
-        "description": "Classic fern - ABOP canonical form"
-    },
-    "fern_dense": {
-        "axiom": "X",
-        "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
-        "angle": 20,
-        "iterations": 7,
-        "description": "Dense fern fronds"
-    },
-    "fern_naturalistic": {
-        "axiom": "X",
-        "rules": {"X": "F[+X][-X]FX", "F": "FF"},
-        "angle": 25.7,
-        "iterations": 7,
-        "description": "Naturalistic fern pattern - optimal angle from research"
-    },
-    "fern_simple": {
-        "axiom": "Y",
-        "rules": {"X": "X[-FFF][+FFF]FX", "Y": "YFX[+Y][-Y]"},
-        "angle": 25.7,
-        "iterations": 5,
-        "description": "Simple pinnate fern"
-    },
-    "fern_bipinnate": {
-        "axiom": "A",
-        "rules": {"A": "F[+B]F[-B]A", "B": "F[+F][-F]F"},
-        "angle": 45,
-        "iterations": 6,
-        "description": "Bipinnate (twice-divided) fern frond"
-    },
-    
-    # Legacy fern aliases
-    "fern": {
-        "axiom": "X",
-        "rules": {"X": "F+[[X]-X]-F[-FX]+X", "F": "FF"},
-        "angle": 25,
-        "iterations": 6,
-        "description": "Fractal fern (Barnsley-like, legacy)"
-    },
-    "fern_barnsley": {
-        "axiom": "X",
-        "rules": {"X": "F+[[X]-X]-F[-FX]+X", "F": "FF"},
-        "angle": 25,
-        "iterations": 6,
-        "description": "Classic Barnsley fern"
-    },
-    "fern_maidenhair": {
-        "axiom": "Y",
-        "rules": {"Y": "F[-X][+X]FY", "X": "F[-X]+X"},
-        "angle": 30,
-        "iterations": 6,
-        "description": "Delicate maidenhair fern pattern"
-    },
-    "feather": {
-        "axiom": "X",
-        "rules": {"X": "F[+X]F[-X]F[+X]", "F": "F"},
-        "angle": 85,
-        "iterations": 6,
-        "description": "Feather or leaf vein pattern"
-    },
-    
-    # =========================================================================
-    # BUSHES AND SHRUBS - 2D
-    # =========================================================================
-    "bush_abop": {
-        "axiom": "F",
-        "rules": {"F": "FF+[+F-F-F]-[-F+F+F]"},
-        "angle": 22.5,
-        "iterations": 4,
-        "description": "ABOP bush structure"
-    },
-    "shrub_dense": {
-        "axiom": "X",
-        "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
-        "angle": 25,
-        "iterations": 5,
-        "description": "Dense shrub"
-    },
-    
-    # Legacy bush aliases
-    "bush": {
-        "axiom": "F",
-        "rules": {"F": "FF+[+F-F-F]-[-F+F+F]"},
-        "angle": 22.5,
-        "iterations": 4,
-        "description": "Dense bush structure (legacy)"
-    },
-    "bush_dense": {
+    "abop_1_24b": {
         "axiom": "F",
         "rules": {"F": "F[+F]F[-F][F]"},
-        "angle": 20,
+        "angle": 20.0,
         "iterations": 5,
-        "description": "Very dense bush"
+        "base_width": 1.5,
+        "description": "ABOP 1.24b - With vertical branch"
     },
-    "weed": {
+    "abop_1_24c": {
         "axiom": "F",
-        "rules": {"F": "F[+F]F[-F]F"},
-        "angle": 25.7,
-        "iterations": 4,
-        "description": "Simple weed/grass"
-    },
-    "grass": {
-        "axiom": "F",
-        "rules": {"F": "F[+F]F[-F]F"},
-        "angle": 25.7,
-        "iterations": 4,
-        "description": "Grass or wheat stalk"
-    },
-    
-    # =========================================================================
-    # AQUATIC AND SPECIAL - 2D
-    # =========================================================================
-    "seaweed_wave": {
-        "axiom": "F",
-        "rules": {"F": "FF-[XY]+[XY]", "X": "+FY", "Y": "-FX"},
+        "rules": {"F": "FF-[-F+F+F]+[+F-F-F]"},
         "angle": 22.5,
-        "iterations": 6,
-        "description": "Swaying seaweed with wave motion"
-    },
-    "kelp_tall": {
-        "axiom": "F",
-        "rules": {"F": "FF[-F++F][+F--F]++F--F"},
-        "angle": 15,
-        "iterations": 5,
-        "description": "Tall kelp fronds"
-    },
-    "coral_branch": {
-        "axiom": "F",
-        "rules": {"F": "FF+[+F-F-F]-[-F+F+F]"},
-        "angle": 25,
-        "iterations": 5,
-        "description": "Branching coral structure"
-    },
-    
-    # Legacy aquatic aliases
-    "seaweed": {
-        "axiom": "F",
-        "rules": {"F": "FF-[XY]+[XY]", "X": "+FY", "Y": "-FX"},
-        "angle": 22.5,
-        "iterations": 5,
-        "description": "Swaying seaweed pattern (legacy)"
-    },
-    "kelp": {
-        "axiom": "F",
-        "rules": {"F": "FF[-F++F][+F--F]++F--F"},
-        "angle": 15,
         "iterations": 4,
-        "description": "Wavy kelp/seaweed"
+        "base_width": 1.5,
+        "description": "ABOP 1.24c - Beautiful bilateral bush"
     },
-    "algae": {
-        "axiom": "F",
-        "rules": {"F": "F[+F][-F]F[-F][+F]F"},
-        "angle": 20,
-        "iterations": 4,
-        "description": "Branching algae pattern"
+    "abop_1_24d": {
+        "axiom": "X",
+        "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
+        "angle": 20.0,
+        "iterations": 7,
+        "base_width": 1.2,
+        "description": "ABOP 1.24d - Asymmetric tree"
     },
-    "coral": {
-        "axiom": "F",
-        "rules": {"F": "FF+[+F-F-F]-[-F+F+F]"},
-        "angle": 25,
-        "iterations": 4,
-        "description": "Coral-like branching"
+    "abop_1_24e": {
+        "axiom": "X",
+        "rules": {"X": "F[+X][-X]FX", "F": "FF"},
+        "angle": 25.7,
+        "iterations": 7,
+        "base_width": 1.2,
+        "description": "ABOP 1.24e - Sympodial growth"
     },
-    
-    # =========================================================================
-    # VINES AND CLIMBERS - 2D
-    # =========================================================================
-    "vine": {
+    "abop_1_24f": {
         "axiom": "X",
         "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
         "angle": 22.5,
         "iterations": 5,
-        "description": "Climbing vine pattern"
+        "base_width": 1.2,
+        "description": "ABOP 1.24f - The elegant plant (ICONIC!)"
     },
-    "ivy": {
+
+    # =========================================================================
+    # TREES - Distinct 2D Silhouettes
+    # =========================================================================
+    "tree_oak_spreading": {
+        # Oak: WIDE spreading crown, branches go outward not up
         "axiom": "FX",
-        "rules": {"X": "X[-FFF][+FFF]FX", "F": "FF"},
-        "angle": 25,
+        "rules": {
+            "X": "F[++X][+X][-X][--X]",  # 5-way split for spreading crown
+            "F": "FF"
+        },
+        "angle": 35,  # Wide angles for horizontal spread
         "iterations": 5,
-        "description": "Ivy climbing pattern"
+        "base_width": 1.8,
+        "description": "Oak - wide spreading crown"
     },
-    
-    # =========================================================================
-    # FLOWERS AND SUCCULENTS - 2D
-    # =========================================================================
-    "flower_simple": {
-        "axiom": "X",
-        "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
+    "tree_willow_weeping": {
+        # Willow: Strong trunk then cascading droopy branches
+        "axiom": "FFFFA",
+        "rules": {
+            "A": "[+B][-B]A",
+            "B": "F[+F[+F]][-F[-F]]"  # Cascading droop pattern
+        },
         "angle": 25,
-        "iterations": 5,
-        "description": "Simple flowering plant"
-    },
-    "succulent": {
-        "axiom": "X",
-        "rules": {"X": "F[-X][+X]", "F": "FF"},
-        "angle": 45,
         "iterations": 6,
-        "description": "Succulent/cactus branching"
+        "base_width": 1.5,
+        "description": "Willow - cascading branches"
     },
-    
-    # =========================================================================
-    # STRUCTURAL / ABSTRACT - 2D
-    # =========================================================================
-    "sympodial": {
-        "axiom": "X",
-        "rules": {"X": "F[-X]F[+X]+X", "F": "FF"},
-        "angle": 20,
-        "iterations": 5,
-        "description": "Sympodial branching (zigzag growth)"
-    },
-    "dichotomous": {
-        "axiom": "X",
-        "rules": {"X": "F[+X][-X]", "F": "FF"},
-        "angle": 30,
+    "tree_poplar_columnar": {
+        # Poplar: Narrow columnar shape, branches close to trunk
+        "axiom": "FA",
+        "rules": {
+            "A": "F[+B][-B]FA",
+            "B": "F[+F][-F]"
+        },
+        "angle": 12,  # Very narrow angles = columnar
         "iterations": 7,
-        "description": "Equal dichotomous branching"
+        "base_width": 1.3,
+        "description": "Poplar - tall columnar shape"
     },
-    "crystal": {
-        "axiom": "F+F+F+F+F+F",
-        "rules": {"F": "F+F-F-F+F"},
+    "tree_elm_vase": {
+        # Elm: Vase-shaped, branches fan outward then up
+        "axiom": "FFX",
+        "rules": {
+            "X": "[++FX][+FX][-FX][--FX]",
+            "F": "F"
+        },
+        "angle": 20,
+        "iterations": 6,
+        "base_width": 1.4,
+        "description": "Elm - vase-shaped crown"
+    },
+
+    # =========================================================================
+    # FERNS - Realistic compound fronds
+    # =========================================================================
+    "fern_frond": {
+        # Real fern: central rachis with alternating pinnae
+        "axiom": "X",
+        "rules": {
+            "X": "F[+P]F[-P]X",
+            "P": "F[+F][-F]F",  # Each pinna has sub-leaflets
+            "F": "F"
+        },
+        "angle": 45,
+        "iterations": 7,
+        "base_width": 0.8,
+        "description": "Fern - realistic frond with pinnae"
+    },
+    "fern_fractal": {
+        # Classic fractal fern
+        "axiom": "X",
+        "rules": {
+            "X": "F+[[X]-X]-F[-FX]+X",
+            "F": "FF"
+        },
+        "angle": 25,
+        "iterations": 6,
+        "base_width": 1.0,
+        "description": "Fern - fractal self-similar"
+    },
+
+    # =========================================================================
+    # ARTISTIC - Abstract but beautiful
+    # =========================================================================
+    "dragon_curve": {
+        "axiom": "FX",
+        "rules": {"X": "X+YF+", "Y": "-FX-Y"},
+        "angle": 90,
+        "iterations": 12,
+        "description": "Dragon curve - mathematical beauty"
+    },
+    "koch_snowflake": {
+        "axiom": "F++F++F",
+        "rules": {"F": "F-F++F-F"},
         "angle": 60,
         "iterations": 4,
-        "description": "Crystal/snowflake pattern"
+        "description": "Koch snowflake"
     },
-    "pine": {
-        "axiom": "F",
-        "rules": {"F": "F[+F][-F]F[+F][-F]"},
-        "angle": 35,
-        "iterations": 4,
-        "description": "Pine branch pattern"
+    "sierpinski": {
+        "axiom": "F-G-G",
+        "rules": {"F": "F-G+F+G-F", "G": "GG"},
+        "angle": 120,
+        "iterations": 6,
+        "description": "Sierpinski triangle"
     },
 }
 
 
 # =============================================================================
-# 3D Plant Presets - Research Validated with Biological Parameters
+# 3D PRESETS - All unique, no duplicates!
 # =============================================================================
 
 PRESETS_3D: Dict[str, Dict[str, Any]] = {
     # =========================================================================
-    # REALISTIC 3D TREES - NO RECURSIVE TIPS
-    # Key principle: Trunk is FIXED, branches develop UNIFORMLY via iterations
-    # No "B → ...B" patterns that create sparse growing tips
+    # ABOP 3D Figures - Research Validated
+    # =========================================================================
+    "abop_1_25": {
+        # 3D bush with hexagonal polygon leaves
+        "axiom": "A",
+        "rules": {
+            "A": "[&FL!A]/////'[&FL!A]///////'[&FL!A]",
+            "F": "S/////F",
+            "S": "FL",
+            "L": "['''^^{-f+f+f-|-f+f+f}]"
+        },
+        "angle": 22.5,
+        "roll_angle": 22.5,
+        "iterations": 7,
+        "base_width": 2.0,
+        "width_decay": 0.707,
+        "render_polygons": True,
+        "description": "ABOP 1.25 - 3D bush with polygon leaves"
+    },
+    "abop_1_26": {
+        # Flowering plant with polygon petals
+        "axiom": "P",
+        "rules": {
+            "P": "I+[P+W]--//[--L]I[++L]-[PW]++PW",
+            "I": "FS[//&&L][//^^L]FS",
+            "S": "SFS",
+            "L": "['{+f-ff-f+|+f-ff-f}]",
+            "W": "[&&&K'/V////V////V////V////V]",
+            "K": "FF",
+            "V": "['^F][{&&&&-f+f|-f+f}]"
+        },
+        "angle": 18.0,
+        "roll_angle": 18.0,
+        "iterations": 5,
+        "base_width": 2.0,
+        "width_decay": 0.75,
+        "render_polygons": True,
+        "description": "ABOP 1.26 - Flowering plant with petals"
+    },
+
+    # =========================================================================
+    # TREES - Each species has UNIQUE silhouette
     # =========================================================================
     
-    # -------------------------------------------------------------------------
-    # OAK - Dense sympodial crown, NO growing tip
-    # -------------------------------------------------------------------------
-    "oak_3d": {
-        "axiom": "FFFFA",
+    # OAK - Wide spreading crown (NOT the umbrella/acacia pattern!)
+    "tree_3d_oak": {
+        "axiom": "FFFA",
         "rules": {
-            # Crown splits into 4 main branches (no tip growth)
-            "A": "[&B]/(90)[&B]/(90)[&B]/(90)[&B]",
-            # Each branch creates 3 sub-branches (NO recursive B)
-            "B": "FF[+$C][-$C][&$C]",
-            # C branches uniformly via iterations (both children expand equally)
-            "C": "F[+$C][-$C]",
+            # Crown starts with 4 main branches spreading outward
+            "A": "[&&&B]/(90)[&&&B]/(90)[&&&B]/(90)[&&&B]",
+            # Each branch splits into 3, creating dense crown
+            "B": "FF[++C][+C][-C][--C]",
+            "C": "F[+C][-C]"
+        },
+        "angle": 40,  # Wide angles for spreading
+        "roll_angle": 90,
+        "iterations": 5,
+        "width_decay": 0.707,
+        "length_decay": 0.7,
+        "description": "Oak - wide spreading crown (NOT umbrella!)"
+    },
+    
+    # PINE - Conical whorled structure
+    "tree_3d_pine": {
+        # Pine has whorled branches getting shorter toward top
+        "axiom": "FWFWFWFWFWFWFWFWFWFWFWFW",
+        "rules": {
+            # 5 branches per whorl at 72° apart
+            "W": "[/&&B][//&&B][///&&B][////&&B][/////&&B]",
+            "B": "FF[+F][-F]"
         },
         "angle": 35,
-        "roll_angle": 90,
-        "iterations": 7,
-        "tropism_strength": 0.0,
-        "width_decay": 0.707,
-        "length_decay": 0.68,
-        "stochastic": 0.15,
-        "description": "Dense spreading oak - uniform branch development"
+        "roll_angle": 72,
+        "iterations": 3,
+        "tropism_strength": 0.12,
+        "tropism_direction": [0, -1, 0],
+        "width_decay": 0.7,
+        "length_decay": 0.85,
+        "description": "Pine - conical with whorled branches"
     },
     
-    # -------------------------------------------------------------------------
-    # MAPLE - Dense decussate branching
-    # -------------------------------------------------------------------------
-    "maple_3d": {
-        "axiom": "FFFFA",
+    # BIRCH - Graceful with upswept fine branches
+    "tree_3d_birch": {
+        "axiom": "FFXFFXFFXFFXFFXFFXFFXFFX",
         "rules": {
-            "A": "[&B]/(180)[&B]",
-            # Double fork per branch, NO recursive tip
-            "B": "FF[+$C][-$C]/[+$C][-$C]",
-            "C": "F[+$C][-$C]"
-        },
-        "angle": 40,
-        "roll_angle": 90,
-        "iterations": 7,
-        "tropism_strength": 0.0,
-        "width_decay": 0.707,
-        "length_decay": 0.72,
-        "stochastic": 0.12,
-        "description": "Dense maple - decussate branching"
-    },
-    
-    # -------------------------------------------------------------------------
-    # BIRCH - FIXED trunk with radial branches, NO growing tip
-    # All branch points defined in axiom, branches develop uniformly
-    # -------------------------------------------------------------------------
-    "birch_3d": {
-        # FIXED trunk: 10 branch points, fully defined
-        "axiom": "FXFXFXFXFXFXFXFXFXFX",
-        "rules": {
-            # Each X creates 3 branches at 120° apart (NO X recursion)
             "X": "[/&B][//&B][///&B]",
-            # Branches fork uniformly (NO recursive B)
-            "B": "FF[+C][-C]",
-            "C": "F[+C][-C]"
-        },
-        "angle": 45,
-        "roll_angle": 120,
-        "iterations": 5,
-        "tropism_strength": 0.08,
-        "tropism_direction": [0, -1, 0],
-        "width_decay": 0.62,
-        "length_decay": 0.75,
-        "stochastic": 0.15,
-        "description": "Birch - fixed trunk, radial branches"
-    },
-    
-    # -------------------------------------------------------------------------
-    # WILLOW - FIXED trunk, drooping branches, NO growing tip
-    # Critical: Branches start horizontal, droop via tropism, NO sparse top
-    # -------------------------------------------------------------------------
-    "willow_3d": {
-        # FIXED trunk: 8 branch points
-        "axiom": "FFXFFXFFXFFXFFXFFXFFXFF",
-        "rules": {
-            # Each X creates 2 horizontal branches (NO X recursion)
-            "X": "[/&B][//&B]",
-            # Branches cascade (NO recursive B at end!)
-            "B": "FFF[+C][-C]",
-            "C": "FF[+C][-C]"
-        },
-        "angle": 75,  # Start nearly horizontal
-        "roll_angle": 180,
-        "iterations": 5,
-        "tropism_strength": 0.15,
-        "tropism_direction": [0, -1, 0],
-        "width_decay": 0.72,
-        "length_decay": 0.82,
-        "stochastic": 0.10,
-        "description": "Weeping willow - fixed trunk, uniform droop"
-    },
-    
-    # -------------------------------------------------------------------------
-    # PINE - FIXED whorled structure, NO growing tip
-    # -------------------------------------------------------------------------
-    "pine_honda": {
-        # FIXED trunk with whorl points
-        "axiom": "FFWFFWFFWFFWFFWFFWFFW",
-        "rules": {
-            # Each W creates 3 branches (ternary, NO recursion)
-            "W": "[/&B][//&B][///&B]",
-            # Branches fork uniformly
-            "B": "FF[+C][-C]",
-            "C": "F[+C][-C]"
-        },
-        "angle": 35,
-        "roll_angle": 120,
-        "iterations": 5,
-        "tropism_strength": 0.10,
-        "tropism_direction": [0, -1, 0],
-        "width_decay": 0.62,
-        "length_decay": 0.80,
-        "description": "Pine - fixed whorled structure"
-    },
-    
-    # -------------------------------------------------------------------------
-    # CONIFER - FIXED dense whorls
-    # -------------------------------------------------------------------------
-    "conifer_realistic": {
-        "axiom": "FWFWFWFWFWFWFWFWFWFWFWFWFW",
-        "rules": {
-            # 4 branches per whorl
-            "W": "[/&L][//&L][///&L][////&L]",
-            "L": "FF[+F][-F]"
+            "B": "FFF[+F[+F]][-F[-F]]"
         },
         "angle": 30,
-        "roll_angle": 90,
-        "iterations": 3,
-        "tropism_strength": 0.08,
-        "tropism_direction": [0, -1, 0],
-        "width_decay": 0.68,
-        "length_decay": 0.82,
-        "description": "Conifer - dense fixed whorls"
+        "roll_angle": 120,
+        "iterations": 4,
+        "tropism_strength": -0.05,  # Slight upward tendency
+        "tropism_direction": [0, 1, 0],
+        "width_decay": 0.65,
+        "length_decay": 0.8,
+        "description": "Birch - graceful upswept branches"
     },
     
-    # =========================================================================
-    # TREE ARCHITECTURE TYPES - Reference models, NO recursive tips
-    # =========================================================================
-    
-    "monopodial_tree": {
-        "axiom": "FXFXFXFXFXFXFXFXFXFX",
+    # MAPLE - Opposite decussate branching
+    "tree_3d_maple": {
+        "axiom": "FFFFA",
         "rules": {
-            "X": "[/&B][//&B][///&B]",
+            # Opposite pairs, each pair rotated 90° from previous
+            "A": "[&+B][&-B]//[&+B][&-B]A",
             "B": "FF[+C][-C]",
             "C": "F[+C][-C]"
         },
-        "angle": 45,
-        "roll_angle": 120,
-        "iterations": 5,
-        "tropism_strength": 0.05,
-        "tropism_direction": [0, -1, 0],
-        "width_decay": 0.707,
-        "length_decay": 0.78,
-        "description": "Monopodial - fixed trunk, uniform branches"
-    },
-    
-    "sympodial_tree": {
-        "axiom": "FFFFA",
-        "rules": {
-            "A": "[&B]/(90)[&B]/(90)[&B]/(90)[&B]",
-            "B": "FF[+$C][-$C][&$C]",
-            "C": "F[+$C][-$C]"
-        },
         "angle": 35,
         "roll_angle": 90,
-        "iterations": 6,
-        "tropism_strength": 0.0,
+        "iterations": 5,
         "width_decay": 0.707,
-        "length_decay": 0.72,
-        "stochastic": 0.12,
-        "description": "Sympodial - uniform forking branches"
+        "length_decay": 0.75,
+        "description": "Maple - opposite decussate branches"
     },
     
-    # =========================================================================
-    # 3D FERNS - Fixed fronds, uniform development
-    # =========================================================================
-    "fern_3d_alternating": {
-        "axiom": "FPFPFPFPFPFPFPFPFPFPFPFP",
+    # WILLOW - Weeping cascading branches
+    "tree_3d_willow": {
+        "axiom": "FFFFXFFXFFXFFXFFXFF",
         "rules": {
-            "P": "[/+L][/-L]",
-            "L": "FF[+F][-F]"
+            "X": "[/&B][//&B][///&B][////&B]",
+            # Branches droop then cascade
+            "B": "FF[&F[&F[&F[&F]]]]"
         },
-        "angle": 45,
-        "roll_angle": 180,
-        "iterations": 3,
-        "width_decay": 0.72,
-        "length_decay": 0.82,
-        "description": "Fern - alternating pinnae"
-    },
-    
-    "fern_3d_spiral": {
-        "axiom": "FPFPFPFPFPFPFPFPFPFPFPFPFPFPFP",
-        "rules": {
-            "P": "[/&L]",
-            "L": "FF[+F][-F][&F]"
-        },
-        "angle": 50,
-        "roll_angle": 137.5,
-        "iterations": 3,
+        "angle": 60,
+        "roll_angle": 90,
+        "iterations": 4,
+        "tropism_strength": 0.2,
+        "tropism_direction": [0, -1, 0],
         "width_decay": 0.75,
         "length_decay": 0.85,
-        "description": "Fern - golden angle spiral"
+        "description": "Willow - weeping cascading branches"
     },
-    
-    "fern_3d_bipinnate": {
-        "axiom": "FPFPFPFPFPFPFPFPFP",
+
+    # CYPRESS - Narrow columnar
+    "tree_3d_cypress": {
+        "axiom": "FXFXFXFXFXFXFXFXFXFXFXFXFX",
         "rules": {
-            "P": "[/+B][/-B]",
-            "B": "FQFQFQ",
-            "Q": "[+F][-F]"
+            "X": "[/&B][//&B][///&B][////&B]",
+            "B": "F[+F][-F]"
         },
-        "angle": 45,
-        "roll_angle": 180,
-        "iterations": 2,
-        "width_decay": 0.70,
-        "length_decay": 0.78,
-        "description": "Fern - bipinnate (twice-divided)"
+        "angle": 15,  # Narrow = columnar
+        "roll_angle": 90,
+        "iterations": 3,
+        "width_decay": 0.8,
+        "length_decay": 0.9,
+        "description": "Cypress - narrow columnar shape"
     },
-    
-    "fern_3d_maidenhair": {
-        "axiom": "FFFPFPFPFPFPFPFPFPFPFP",
+
+    # =========================================================================
+    # PALM - COMPLETELY REDESIGNED!
+    # Now has 8-12 large fronds with pinnate (feather-like) structure
+    # =========================================================================
+    "palm_3d": {
+        # Tall trunk then crown of 10 large pinnate fronds
+        "axiom": "FFFFFFFFFF[P][/P][//P][///P][////P][/////P][//////P][///////P][////////P][/////////P]",
         "rules": {
-            "P": "[/&L]",
-            "L": "F[+F][++F][-F][--F]"
+            # Each frond (P) is pinnate: central rachis with many pinnae
+            "P": "&&&RRRRRRRRRR",  # Long arching rachis
+            "R": "F[+L][++L][-L][--L]/",  # Pinnae on both sides, spiral slightly
+            "L": "FF"  # Each pinna is a simple leaf segment
         },
         "angle": 25,
-        "roll_angle": 137.5,
-        "iterations": 3,
-        "width_decay": 0.65,
-        "length_decay": 0.82,
-        "description": "Maidenhair fern - delicate fans"
-    },
-    
-    "fiddlehead_3d": {
-        "axiom": "FFFFFFFFFFFFFF",
-        "rules": {
-            "F": "F&"
-        },
-        "angle": 12,
-        "roll_angle": 8,
-        "iterations": 6,
-        "width_decay": 0.95,
-        "length_decay": 0.97,
-        "description": "Fiddlehead - unfurling spiral"
-    },
-    
-    # =========================================================================
-    # PHYLLOTAXIS - Golden angle patterns
-    # =========================================================================
-    "phyllotaxis_spiral": {
-        "axiom": "FLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFL",
-        "rules": {
-            "L": "[/&S]",
-            "S": "[^^FF]"
-        },
-        "angle": 40,
-        "roll_angle": 137.5077,
+        "roll_angle": 36,  # 360/10 = 36° between fronds
         "iterations": 2,
-        "width_decay": 0.95,
-        "length_decay": 0.97,
-        "description": "Golden angle spiral - Fibonacci pattern"
+        "tropism_strength": 0.15,
+        "tropism_direction": [0, -1, 0],  # Fronds droop naturally
+        "width_decay": 0.6,
+        "length_decay": 0.85,
+        "description": "Palm - 10 pinnate fronds with drooping tips"
     },
-    
+
+    # =========================================================================
+    # PHYLLOTAXIS - REDESIGNED for visual impact!
+    # Bowl/dome shape so golden angle spiral is visible
+    # =========================================================================
+    "phyllotaxis_bowl": {
+        # Spiral arrangement where each leaf tilts outward to form bowl
+        "axiom": "A",
+        "rules": {
+            "A": "F/[&&L]A",  # Each step: grow, roll by golden angle, add outward leaf
+            "L": "F[+F][-F][++F][--F]"  # Fan of leaflets
+        },
+        "angle": 45,
+        "roll_angle": 137.5,  # THE golden angle!
+        "iterations": 40,
+        "width_decay": 0.98,
+        "length_decay": 0.98,
+        "camera_angle": 75,  # View from above to see spiral!
+        "description": "Phyllotaxis - golden angle bowl (view from above!)"
+    },
+
+    # =========================================================================
+    # SUNFLOWER - Working shape with color support
+    # Uses ' to set color_index for yellow florets
+    # =========================================================================
     "sunflower_head": {
+        # Dense spiral of florets - original working shape
         "axiom": "SLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSLSL",
         "rules": {
-            "L": "[/&F]",
+            "L": "[/&'F]",  # ' sets color_index=1 (yellow)
             "S": ""
         },
         "angle": 30,
@@ -636,205 +397,149 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
         "iterations": 1,
         "width_decay": 0.98,
         "length_decay": 0.99,
-        "description": "Sunflower head - dense spiral"
+        "description": "Sunflower head - dense golden spiral"
     },
-    
+
+    # =========================================================================
+    # SUCCULENT - Rosette with thick leaves
+    # =========================================================================
     "succulent_rosette": {
-        "axiom": "XLXLXLXLXLXLXLXLXLXLXLXLXLXL",
+        "axiom": "A",
         "rules": {
-            "X": "/",
-            "L": "[&FF[+F][-F]]"
+            "A": "[&&L]/A",
+            "L": "FFF"  # Thick fleshy leaves
         },
         "angle": 60,
         "roll_angle": 137.5,
-        "iterations": 2,
-        "width_decay": 0.88,
-        "length_decay": 0.90,
-        "description": "Succulent rosette - golden spiral"
+        "iterations": 21,  # Fibonacci number
+        "width_decay": 0.95,
+        "length_decay": 0.92,
+        "description": "Succulent - golden angle rosette"
     },
-    
+
     # =========================================================================
-    # TROPICAL - Palm and bamboo
+    # FERNS 3D - Realistic compound fronds
     # =========================================================================
-    "palm_3d_realistic": {
-        "axiom": "FFFFFFFFFFF[&&&P][/&&&P][//&&&P][///&&&P][////&&&P]",
+    "fern_3d_frond": {
+        # Single fern frond with alternating pinnae
+        "axiom": "FFFFFFFFFFFFFA",
         "rules": {
-            "P": "FFFF[+F][-F][++F][--F]F"
+            "A": "[/+P][/-P]FA",
+            "P": "FF[++F][+F][-F][--F]"  # Each pinna has pinnules
         },
-        "angle": 25,
-        "roll_angle": 72,
+        "angle": 40,
+        "roll_angle": 180,  # Alternate sides
         "iterations": 3,
-        "tropism_strength": 0.12,
-        "tropism_direction": [0, -1, 0],
-        "width_decay": 0.78,
-        "length_decay": 0.82,
-        "description": "Palm tree - 5 fronds"
+        "width_decay": 0.6,
+        "length_decay": 0.75,
+        "description": "Fern - realistic pinnate frond"
     },
-    
+    "fern_3d_spiral": {
+        # Fern with golden angle phyllotaxis
+        "axiom": "FFFFFFFFFFA",
+        "rules": {
+            "A": "[/&P]A",
+            "P": "F[++F][+F][-F][--F][+++F][---F]"
+        },
+        "angle": 50,
+        "roll_angle": 137.5,
+        "iterations": 4,
+        "width_decay": 0.65,
+        "length_decay": 0.8,
+        "description": "Fern - golden angle spiral arrangement"
+    },
+
+    # =========================================================================
+    # BAMBOO - Segmented culms with node branches
+    # =========================================================================
     "bamboo_3d": {
-        "axiom": "FNFNFNFNFNFNFNFNFNFNFNFNFN",
+        # Segmented stem (culm) with branches at nodes
+        "axiom": "NCNCNCNCNCNCNCNCNCNCNCNC",
         "rules": {
-            "N": "[/+L][/-L]",
-            "L": "FF[+F][-F]"
+            "N": "[/+B][/-B][/++B][/--B]",  # 4 branches at each node
+            "C": "FF",  # Culm segment
+            "B": "FF[+F][-F]"
         },
-        "angle": 55,
-        "roll_angle": 180,
-        "iterations": 3,
-        "width_decay": 0.94,
-        "length_decay": 0.90,
-        "description": "Bamboo - alternating branches"
+        "angle": 45,
+        "roll_angle": 45,
+        "iterations": 2,
+        "width_decay": 0.98,  # Bamboo stays nearly same width
+        "length_decay": 0.95,
+        "description": "Bamboo - segmented with node branches"
     },
-    
+
     # =========================================================================
-    # ARTISTIC - Abstract patterns
+    # ARTISTIC / ABSTRACT
     # =========================================================================
-    "helix_vine": {
-        "axiom": "FLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFL",
+    "spiral_vine": {
+        "axiom": "A",
         "rules": {
-            "L": "[/&S]",
-            "S": "F[+F][-F]"
+            "A": "F/[+L][-L]A",
+            "L": "[&F]"
         },
         "angle": 30,
-        "roll_angle": 36,
-        "iterations": 2,
-        "width_decay": 0.94,
-        "length_decay": 0.97,
-        "description": "Helical vine"
+        "roll_angle": 30,
+        "iterations": 30,
+        "width_decay": 0.98,
+        "length_decay": 0.98,
+        "description": "Spiral vine - helical climbing"
     },
-    
-    "crystal_tree": {
-        "axiom": "FFFFA",
+    "coral_branch": {
+        "axiom": "FFA",
         "rules": {
-            "A": "[+B][-B][&B][^B]",
-            "B": "FF[+B][-B]"
+            "A": "F[&/+A][&/-A][&//+A][&//-A]"
+        },
+        "angle": 30,
+        "roll_angle": 60,
+        "iterations": 6,
+        "width_decay": 0.75,
+        "length_decay": 0.8,
+        "description": "Coral - multi-way branching"
+    },
+    "crystal_growth": {
+        "axiom": "FA",
+        "rules": {
+            "A": "[+A][-A][&A][^A]F"
         },
         "angle": 90,
         "roll_angle": 90,
         "iterations": 5,
-        "width_decay": 0.707,
-        "length_decay": 0.68,
-        "description": "Crystal tree - orthogonal"
+        "width_decay": 0.85,
+        "length_decay": 0.85,
+        "description": "Crystal - orthogonal growth"
     },
-    
-    "bush_3d_dense": {
-        "axiom": "FFFFA",
-        "rules": {
-            "A": "[&B]/(60)[&B]/(60)[&B]/(60)[&B]/(60)[&B]/(60)[&B]",
-            "B": "FF[+C][-C][&C]",
-            "C": "F[+C][-C]"
-        },
-        "angle": 35,
-        "roll_angle": 60,
-        "iterations": 5,
-        "width_decay": 0.68,
-        "length_decay": 0.75,
-        "description": "Dense bush - 6-way branching"
-    },
-    
+
     # =========================================================================
-    # LEGACY PRESETS - Updated for uniform development
+    # HONDA TREE MODEL - Research validated
     # =========================================================================
-    "tree_3d_simple": {
-        "axiom": "FFFA",
-        "rules": {
-            "A": "[+B][-B][&B][^B]",
-            "B": "FF[+B][-B]"
-        },
-        "angle": 30,
-        "roll_angle": 90,
-        "iterations": 5,
-        "description": "Simple 3D tree"
-    },
-    
-    "bush_3d": {
+    "honda_tree": {
         "axiom": "FFFFA",
         "rules": {
-            "A": "[&B]/(72)[&B]/(72)[&B]/(72)[&B]/(72)[&B]",
-            "B": "FF[+C][-C]",
-            "C": "F[+C][-C]"
-        },
-        "angle": 35,
-        "roll_angle": 72,
-        "iterations": 5,
-        "description": "3D bush - 5-way branching"
-    },
-    
-    "tree_3d_realistic": {
-        "axiom": "FFFFA",
-        "rules": {
-            "A": "[&B]/(90)[&B]/(90)[&B]/(90)[&B]",
-            "B": "FF[+$C][-$C][&$C]",
+            "A": "F[&B]//[&B]//[&B]A",
+            "B": "FF[+$C][-$C]",
             "C": "F[+$C][-$C]"
         },
         "angle": 35,
-        "roll_angle": 90,
-        "iterations": 6,
-        "tropism_strength": 0.05,
-        "tropism_direction": [0, -1, 0],
-        "width_decay": 0.707,
-        "length_decay": 0.75,
-        "description": "Realistic 3D tree"
-    },
-    
-    "spiral_plant_3d": {
-        "axiom": "FLFLFLFLFLFLFLFLFLFLFLFLFL",
-        "rules": {
-            "L": "[/&S]",
-            "S": "[+F][-F]"
-        },
-        "angle": 35,
-        "roll_angle": 137.5,
-        "iterations": 2,
-        "description": "Spiral plant - golden angle"
-    },
-    
-    "fern_3d": {
-        "axiom": "FPFPFPFPFPFPFPFPFPFPFP",
-        "rules": {
-            "P": "[/+L][/-L]",
-            "L": "FF[+F][-F]"
-        },
-        "angle": 30,
-        "roll_angle": 180,
-        "iterations": 3,
-        "description": "3D fern - alternating fronds"
-    },
-    
-    "palm_3d": {
-        "axiom": "FFFFFFFFFFF[&&&P][/&&&P][//&&&P][///&&&P][////&&&P]",
-        "rules": {
-            "P": "FFF[+F][-F]F"
-        },
-        "angle": 30,
-        "roll_angle": 72,
-        "iterations": 2,
-        "description": "Palm tree - 5 fronds"
-    },
-    
-    "conifer_3d": {
-        "axiom": "FWFWFWFWFWFWFWFWFWFWFW",
-        "rules": {
-            "W": "[/&L][//&L][///&L][////&L]",
-            "L": "FF[-F][+F]"
-        },
-        "angle": 28,
-        "roll_angle": 90,
-        "iterations": 3,
-        "description": "Conifer - whorled branches"
-    },
-    
-    "helix_3d": {
-        "axiom": "FLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFLFL",
-        "rules": {
-            "L": "[/&F]"
-        },
-        "angle": 30,
-        "roll_angle": 36,
-        "iterations": 1,
-        "description": "Helix - spiral pattern"
+        "roll_angle": 120,
+        "iterations": 7,
+        "width_decay": 0.707,  # Leonardo's rule
+        "length_decay": 0.8,
+        "tropism_strength": 0.1,
+        "description": "Honda tree - with Leonardo's rule"
     },
 }
 
+
+# =============================================================================
+# COMBINED PRESETS DICTIONARY
+# =============================================================================
+
+PRESETS = PRESETS_2D  # PRESETS is just 2D presets (matching original structure)
+
+
+# =============================================================================
+# HELPER FUNCTIONS - Must match main.py's expected signatures
+# =============================================================================
 
 def get_preset(name: str, include_3d: bool = True) -> dict:
     """
@@ -846,8 +551,7 @@ def get_preset(name: str, include_3d: bool = True) -> dict:
         
     Returns:
         Preset dictionary with axiom, rules, angle, iterations,
-        and optional biological parameters (width_decay, length_decay,
-        tropism_strength, stochastic, etc.)
+        and optional biological parameters
         
     Raises:
         KeyError: If preset not found
@@ -872,6 +576,11 @@ def get_preset(name: str, include_3d: bool = True) -> dict:
     raise KeyError(f"Unknown preset '{name}'. Available presets: {available}")
 
 
+def is_3d_preset(name: str) -> bool:
+    """Check if a preset is 3D."""
+    return name.lower() in PRESETS_3D
+
+
 def list_presets(include_3d: bool = False) -> List[str]:
     """
     Return list of available preset names.
@@ -888,6 +597,56 @@ def list_presets(include_3d: bool = False) -> List[str]:
     return sorted(presets)
 
 
+# =============================================================================
+# PRESET CATEGORIES for batch generator
+# =============================================================================
+
+PRESET_CATEGORIES = {
+    "showcase": [
+        "abop_1_24c",       # 2D - Beautiful bilateral
+        "abop_1_24f",       # 2D - Elegant plant
+        "abop_1_25",        # 3D - Bush with polygon leaves
+        "abop_1_26",        # 3D - Flowering plant
+        "tree_3d_oak",      # 3D - Spreading oak
+        "palm_3d",          # 3D - Realistic palm
+        "sunflower_head",   # 3D - Fibonacci spiral
+        "phyllotaxis_bowl", # 3D - Golden angle visible
+    ],
+    "abop_figures": [
+        "abop_1_24a", "abop_1_24b", "abop_1_24c",
+        "abop_1_24d", "abop_1_24e", "abop_1_24f",
+        "abop_1_25", "abop_1_26",
+    ],
+    "trees_2d": [
+        "tree_oak_spreading", "tree_willow_weeping",
+        "tree_poplar_columnar", "tree_elm_vase",
+    ],
+    "trees_3d": [
+        "tree_3d_oak", "tree_3d_pine", "tree_3d_birch",
+        "tree_3d_maple", "tree_3d_willow", "tree_3d_cypress",
+        "honda_tree",
+    ],
+    "tropical": [
+        "palm_3d", "bamboo_3d",
+    ],
+    "phyllotaxis": [
+        "phyllotaxis_bowl", "sunflower_head", "succulent_rosette",
+    ],
+    "ferns": [
+        "fern_frond", "fern_fractal",  # 2D
+        "fern_3d_frond", "fern_3d_spiral",  # 3D
+    ],
+    "artistic": [
+        "dragon_curve", "koch_snowflake", "sierpinski",  # 2D
+        "spiral_vine", "coral_branch", "crystal_growth",  # 3D
+    ],
+}
+
+
+# =============================================================================
+# FUNCTIONS REQUIRED BY main.py
+# =============================================================================
+
 def list_presets_by_category() -> Dict[str, List[str]]:
     """
     Return presets organized by category.
@@ -897,87 +656,31 @@ def list_presets_by_category() -> Dict[str, List[str]]:
     """
     return {
         # 2D Categories
-        "2D Trees": ["tree_binary", "tree_elegant", "tree_asymmetric", 
-                     "tree_stochastic", "oak_2d", "willow_2d",
-                     "tree", "tree2", "tree_oak", "tree_willow", "bonsai", "dragon_tree"],
-        "2D Ferns": ["fern_classic", "fern_dense", "fern_naturalistic",
-                     "fern_simple", "fern_bipinnate",
-                     "fern", "fern_barnsley", "fern_maidenhair", "feather"],
-        "2D Bushes": ["bush_abop", "shrub_dense",
-                      "bush", "bush_dense", "weed", "grass"],
-        "2D Aquatic": ["seaweed_wave", "kelp_tall", "coral_branch",
-                       "seaweed", "kelp", "algae", "coral"],
-        "2D Vines": ["vine", "ivy"],
-        "2D Special": ["flower_simple", "succulent", "sympodial", 
-                       "dichotomous", "crystal", "pine"],
+        "2D ABOP Classics": ["abop_1_24a", "abop_1_24b", "abop_1_24c",
+                            "abop_1_24d", "abop_1_24e", "abop_1_24f"],
+        "2D Trees": ["tree_oak_spreading", "tree_willow_weeping", 
+                     "tree_poplar_columnar", "tree_elm_vase"],
+        "2D Ferns": ["fern_frond", "fern_fractal"],
+        "2D Artistic": ["dragon_curve", "koch_snowflake", "sierpinski"],
         
         # 3D Categories
-        "3D Realistic Trees": ["oak_3d", "maple_3d", "birch_3d", "willow_3d",
-                               "pine_honda", "conifer_realistic"],
-        "3D Tree Architecture": ["monopodial_tree", "sympodial_tree"],
-        "3D Ferns": ["fern_3d_alternating", "fern_3d_spiral", "fern_3d_bipinnate",
-                     "fern_3d_maidenhair", "fiddlehead_3d"],
-        "3D Phyllotaxis": ["phyllotaxis_spiral", "sunflower_head", "succulent_rosette"],
-        "3D Tropical": ["palm_3d_realistic", "bamboo_3d"],
-        "3D Artistic": ["helix_vine", "crystal_tree", "bush_3d_dense"],
-        "3D Legacy": ["tree_3d_simple", "bush_3d", "tree_3d_realistic",
-                      "spiral_plant_3d", "fern_3d", "palm_3d", "conifer_3d", "helix_3d"]
+        "3D ABOP Figures": ["abop_1_25", "abop_1_26"],
+        "3D Trees": ["tree_3d_oak", "tree_3d_pine", "tree_3d_birch",
+                     "tree_3d_maple", "tree_3d_willow", "tree_3d_cypress",
+                     "honda_tree"],
+        "3D Tropical": ["palm_3d", "bamboo_3d"],
+        "3D Phyllotaxis": ["phyllotaxis_bowl", "sunflower_head", "succulent_rosette"],
+        "3D Ferns": ["fern_3d_frond", "fern_3d_spiral"],
+        "3D Artistic": ["spiral_vine", "coral_branch", "crystal_growth"],
     }
 
 
-def get_preset_info(name: str) -> str:
-    """
-    Get formatted information about a preset.
-    
-    Args:
-        name: Preset name
-        
-    Returns:
-        Formatted string with preset details
-    """
-    preset = get_preset(name, include_3d=True)
-    info_lines = [
-        f"Preset: {name}",
-        f"  Axiom: {preset['axiom']}",
-        f"  Rules: {preset['rules']}",
-        f"  Angle: {preset['angle']}Â°",
-        f"  Iterations: {preset['iterations']}"
-    ]
-    
-    if 'description' in preset:
-        info_lines.append(f"  Description: {preset['description']}")
-    
-    if preset.get('is_3d'):
-        info_lines.append("  Type: 3D")
-        if 'roll_angle' in preset:
-            info_lines.append(f"  Roll Angle: {preset['roll_angle']}Â°")
-        if 'tropism_strength' in preset:
-            info_lines.append(f"  Tropism Strength: {preset['tropism_strength']}")
-        if 'width_decay' in preset:
-            info_lines.append(f"  Width Decay: {preset['width_decay']}")
-        if 'length_decay' in preset:
-            info_lines.append(f"  Length Decay: {preset['length_decay']}")
-        if 'stochastic' in preset:
-            info_lines.append(f"  Stochastic: {preset['stochastic']}")
-    
-    return '\n'.join(info_lines)
-
-
-# Key biological constants for reference
-GOLDEN_ANGLE = 137.5077  # Optimal phyllotaxis angle
-LEONARDO_WIDTH_DECAY = 0.707  # âˆš2â»Â¹ - preserves cross-sectional area
-HONDA_BRANCHING_ANGLE = 18.95  # Honda's optimal angle
-HONDA_DIVERGENCE_D1 = 94.74  # Honda's first divergence angle
-HONDA_DIVERGENCE_D2 = 132.63  # Honda's second divergence angle
-
 # =============================================================================
-# PARAMETRIC PRESETS - ABOP Advanced Features
+# PARAMETRIC PRESETS - For advanced L-system features
 # =============================================================================
 
 PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
-    # =========================================================================
-    # GROWING TREES - Continuous segment elongation
-    # =========================================================================
+    # Growing trees with continuous segment elongation
     "growing_tree_param": {
         "type": "parametric",
         "axiom": "A(1,10)",
@@ -1004,9 +707,7 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "description": "Parametric bush with variable segment lengths"
     },
     
-    # =========================================================================
-    # STOCHASTIC PLANTS - Natural variation
-    # =========================================================================
+    # Stochastic plants
     "stochastic_bush_abop": {
         "type": "parametric",
         "axiom": "F",
@@ -1033,148 +734,30 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "description": "Stochastic tree with natural variation"
     },
     
-    # =========================================================================
-    # DEVELOPMENTAL LEAVES - Using polygon notation
-    # =========================================================================
+    # Developmental leaves using polygon notation
     "developmental_leaf": {
         "type": "parametric",
         "axiom": "[A(0)][B(0)]",
         "productions": [
-            # Left lobe: grows outward, creates wedge polygons
             "A(n) : n < 6 -> F{.+F.-F.}A(n+1)",
-            # Right lobe: mirror image
             "B(n) : n < 6 -> F{.-F.+F.}B(n+1)",
-            # Terminal
             "A(n) : n >= 6 -> F",
             "B(n) : n >= 6 -> F",
         ],
         "angle": 30,
         "iterations": 6,
-        "description": "Cordate leaf with polygon filling - creates wedge-shaped polygons"
+        "description": "Cordate leaf with polygon filling"
     },
     
     "simple_polygon_leaf": {
         "type": "parametric", 
         "axiom": "A",
         "productions": [
-            # Simple triangular leaf shape
             "A -> {.F.+F.+F.}",
         ],
         "angle": 120,
         "iterations": 1,
         "description": "Simple triangular polygon test"
-    },
-    
-    "growing_leaf": {
-        "type": "parametric",
-        "axiom": "A(1)",
-        "productions": [
-            "A(t) : t < 10 -> F(t){.+F(t).-..-F(t).+|+F(t).-..-.}A(t+1)",
-            "A(t) : t >= 10 -> F(t)",
-        ],
-        "constants": {},
-        "angle": 30,
-        "iterations": 10,
-        "description": "Growing leaf shape"
-    },
-    
-    # =========================================================================
-    # HONDA'S TREE MODEL - Research validated
-    # =========================================================================
-    "honda_tree_param": {
-        "type": "parametric",
-        "axiom": "A(100,20)",
-        "productions": [
-            "A(l,w) -> !(w)F(l)[&B(l*r1,w*wr)]/[&B(l*r2,w*wr)]",
-            "B(l,w) -> !(w)F(l)[+B(l*r1,w*wr)][-B(l*r2,w*wr)]",
-        ],
-        "constants": {
-            "r1": 0.9, "r2": 0.7,
-            "wr": 0.707,
-        },
-        "angle": 45,
-        "roll_angle": 137.5,
-        "iterations": 10,
-        "is_3d": True,
-        "description": "Honda tree model - ABOP Chapter 2"
-    },
-    
-    # =========================================================================
-    # PHYLLOTAXIS PATTERNS - Golden angle
-    # =========================================================================
-    "sunflower_vogel": {
-        "type": "parametric",
-        "axiom": "A(0)",
-        "productions": [
-            "A(n) : n < 200 -> +(137.5)[f(2*sqrt(n)).]A(n+1)",
-        ],
-        "angle": 0,
-        "iterations": 200,
-        "description": "Sunflower head - Vogel's formula (ABOP Chapter 4)"
-    },
-    
-    "phyllotaxis_rosette": {
-        "type": "parametric",
-        "axiom": "A(0)",
-        "productions": [
-            "A(n) : n < 55 -> [&F(3)']/(137.5)A(n+1)",
-        ],
-        "angle": 30,
-        "roll_angle": 137.5,
-        "iterations": 55,
-        "is_3d": True,
-        "description": "Rosette pattern with golden angle phyllotaxis"
-    },
-    
-    # =========================================================================
-    # SIGNAL-BASED GROWTH
-    # =========================================================================
-    "signal_tree": {
-        "type": "parametric",
-        "axiom": "A(0)",
-        "productions": [
-            "A(s) : s == 0 -> F[-B(1)]F[+B(1)]A(0)",
-            "B(s) : s > 0 -> F[-B(s-1)][+B(s-1)]",
-            "B(s) : s == 0 -> B(0)",
-        ],
-        "constants": {},
-        "angle": 45,
-        "iterations": 8,
-        "description": "Tree with signal-based branch activation"
-    },
-    
-    # =========================================================================
-    # PARAMETRIC 3D PLANTS
-    # =========================================================================
-    "parametric_conifer_3d": {
-        "type": "parametric",
-        "axiom": "T(1,50)",
-        "productions": [
-            "T(age,l) : age < 10 -> F(l)[&B(l*0.4)]/(137.5)T(age+1,l*0.95)",
-            "B(l) -> F(l)[+B(l*0.7)][-B(l*0.7)]",
-        ],
-        "constants": {},
-        "angle": 30,
-        "roll_angle": 137.5,
-        "iterations": 10,
-        "is_3d": True,
-        "description": "Parametric conifer with golden angle"
-    },
-    
-    "parametric_palm_3d": {
-        "type": "parametric",
-        "axiom": "T(0,10)",
-        "productions": [
-            "T(n,l) : n < 8 -> F(l)T(n+1,l*0.95)",
-            "T(n,l) : n >= 8 -> F(l)W(0)",
-            "W(a) : a < 5 -> [&&&F(30)[+F(10)][-F(10)]F(10)]/(72)W(a+1)",
-        ],
-        "constants": {},
-        "angle": 35,
-        "roll_angle": 72,
-        "iterations": 15,
-        "is_3d": True,
-        "description": "Parametric palm tree with whorled fronds"
     },
 }
 
