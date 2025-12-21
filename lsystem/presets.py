@@ -1,16 +1,15 @@
 """
-L-System Plant Presets - Enhanced Version (Complete)
+L-System Plant Presets - Complete Integrated Version
 
-KEY FIXES:
-1. SUNFLOWER: Dense Vogel spiral with 200+ florets, golden angle rotation
-2. PHYLLOTAXIS: Proper 3D bowl shape, visible from any angle
-3. PALM: True pinnate fronds with leaflets on both sides
-4. TREES: Asymmetric branching for natural look (not umbrella shapes)
+Includes:
+- Original presets
+- NEW: 60+ presets from Lsystems.pdf and ABOP book
 
 Based on:
 - "The Algorithmic Beauty of Plants" (Prusinkiewicz & Lindenmayer)
-- Vogel's formula for phyllotaxis: φ = n × 137.5°, r = c × √n
-- Honda/Borchert tree models with asymmetric vigor distribution
+- Lsystems.pdf (Houdini L-Systems Tutorial)
+- Vogel's formula for phyllotaxis
+- Honda/Borchert tree models
 """
 
 from typing import Dict, Any, List
@@ -148,7 +147,7 @@ PRESETS_2D: Dict[str, Dict[str, Any]] = {
     },
 
     # =========================================================================
-    # ARTISTIC / FRACTALS
+    # ARTISTIC / FRACTALS (original)
     # =========================================================================
     "dragon_curve": {
         "axiom": "FX",
@@ -173,6 +172,235 @@ PRESETS_2D: Dict[str, Dict[str, Any]] = {
         "iterations": 6,
         "base_width": 1.0,
         "description": "Sierpinski triangle"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Koch Curve Variants
+    # =========================================================================
+    "quadratic_koch": {
+        "axiom": "F-F-F-F",
+        "rules": {"F": "F+FF-FF-F-F+F+FF-F-F+F+FF+FF-F"},
+        "angle": 90,
+        "iterations": 2,
+        "description": "Quadratic Koch curve - ABOP p9",
+        "category": "fractals"
+    },
+    
+    "quadratic_snowflake": {
+        "axiom": "-F",
+        "rules": {"F": "F+F-F-F+F"},
+        "angle": 90,
+        "iterations": 4,
+        "description": "Quadratic snowflake fractal",
+        "category": "fractals"
+    },
+    
+    "koch_curve_a": {
+        "axiom": "F-F-F-F",
+        "rules": {"F": "FF-F-F-F-F-F+F"},
+        "angle": 90,
+        "iterations": 4,
+        "description": "Koch curve variant a - closed island",
+        "category": "fractals"
+    },
+    
+    "koch_curve_b": {
+        "axiom": "F-F-F-F",
+        "rules": {"F": "FF-F-F-F-FF"},
+        "angle": 90,
+        "iterations": 4,
+        "description": "Koch curve variant b - square fill pattern",
+        "category": "fractals"
+    },
+    
+    "koch_curve_c": {
+        "axiom": "F-F-F-F",
+        "rules": {"F": "FF-F+F-F-FF"},
+        "angle": 90,
+        "iterations": 3,
+        "description": "Koch curve variant c",
+        "category": "fractals"
+    },
+    
+    "koch_curve_d": {
+        "axiom": "F-F-F-F",
+        "rules": {"F": "FF-F--F-F"},
+        "angle": 90,
+        "iterations": 3,
+        "description": "Koch curve variant d",
+        "category": "fractals"
+    },
+    
+    "koch_curve_e": {
+        "axiom": "F-F-F-F",
+        "rules": {"F": "F-FF--F-F"},
+        "angle": 90,
+        "iterations": 5,
+        "description": "Koch curve variant e - dragon-like",
+        "category": "fractals"
+    },
+    
+    "koch_curve_f": {
+        "axiom": "F-F-F-F",
+        "rules": {"F": "F-F+F-F-F"},
+        "angle": 90,
+        "iterations": 5,
+        "description": "Koch curve variant f - dense fill",
+        "category": "fractals"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Diamond and Space-Filling Curves
+    # =========================================================================
+    "diamond_fractal": {
+        "axiom": "F",
+        "rules": {"F": "FF++F++F++F-F"},
+        "angle": 60,
+        "iterations": 4,
+        "description": "Diamond-shaped recursive fractal",
+        "category": "fractals"
+    },
+    
+    "hilbert_curve": {
+        "axiom": "A",
+        "rules": {
+            "A": "-BF+AFA+FB-",
+            "B": "+AF-BFB-FA+"
+        },
+        "angle": 90,
+        "iterations": 5,
+        "description": "Hilbert space-filling curve",
+        "category": "fractals"
+    },
+    
+    "peano_curve": {
+        "axiom": "F",
+        "rules": {"F": "F+F-F-F-F+F+F+F-F"},
+        "angle": 90,
+        "iterations": 3,
+        "description": "Peano space-filling curve",
+        "category": "fractals"
+    },
+    
+    "gosper_curve": {
+        "axiom": "A",
+        "rules": {
+            "A": "A-B--B+A++AA+B-",
+            "B": "+A-BB--B-A++A+B"
+        },
+        "angle": 60,
+        "iterations": 4,
+        "description": "Gosper curve (flowsnake) - hexagonal space filler",
+        "category": "fractals"
+    },
+    
+    "sierpinski_arrowhead": {
+        "axiom": "A",
+        "rules": {"A": "B-A-B", "B": "A+B+A"},
+        "angle": 60,
+        "iterations": 7,
+        "description": "Sierpinski arrowhead curve",
+        "category": "fractals"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: ABOP Plants (alternative naming)
+    # =========================================================================
+    "abop_plant_a": {
+        "axiom": "F",
+        "rules": {"F": "F[+F]F[-F]F"},
+        "angle": 25.7,
+        "iterations": 4,
+        "base_width": 1.5,
+        "description": "ABOP 1.24a - edge-rewriting plant",
+        "category": "abop_plants"
+    },
+    
+    "abop_plant_b": {
+        "axiom": "F",
+        "rules": {"F": "F[+F]F[-F][F]"},
+        "angle": 20,
+        "iterations": 5,
+        "base_width": 1.5,
+        "description": "ABOP 1.24b - three-branch variant",
+        "category": "abop_plants"
+    },
+    
+    "abop_plant_c": {
+        "axiom": "F",
+        "rules": {"F": "FF-[-F+F+F]+[+F-F-F]"},
+        "angle": 22.5,
+        "iterations": 4,
+        "base_width": 1.5,
+        "description": "ABOP 1.24c - symmetrical branching",
+        "category": "abop_plants"
+    },
+    
+    "abop_plant_d": {
+        "axiom": "X",
+        "rules": {"X": "F[+X]F[-X]+X", "F": "FF"},
+        "angle": 20,
+        "iterations": 7,
+        "base_width": 1.2,
+        "description": "ABOP 1.24d - node-rewriting",
+        "category": "abop_plants"
+    },
+    
+    "abop_plant_e": {
+        "axiom": "X",
+        "rules": {"X": "F[+X][-X]FX", "F": "FF"},
+        "angle": 25.7,
+        "iterations": 7,
+        "base_width": 1.2,
+        "description": "ABOP 1.24e - node-rewriting with wider angle",
+        "category": "abop_plants"
+    },
+    
+    "abop_plant_f": {
+        "axiom": "X",
+        "rules": {"X": "F-[[X]+X]+F[+FX]-X", "F": "FF"},
+        "angle": 22.5,
+        "iterations": 5,
+        "base_width": 1.2,
+        "description": "ABOP 1.24f - elegant plant (ICONIC!)",
+        "category": "abop_plants"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Polygon Leaves (2D)
+    # =========================================================================
+    "leaf_cordate": {
+        "axiom": "[A][B]",
+        "rules": {
+            "A": "[+A{.].C.}",
+            "B": "[-B{.].C.}",
+            "C": "FFFC"
+        },
+        "angle": 16,
+        "iterations": 12,
+        "render_polygons": True,
+        "description": "ABOP Fig 5.5 - Cordate (heart-shaped) leaf",
+        "category": "leaves"
+    },
+    
+    "leaf_triangle": {
+        "axiom": "{.+F.-F.-F.}",
+        "rules": {},
+        "angle": 120,
+        "iterations": 1,
+        "render_polygons": True,
+        "description": "Simple triangular leaf",
+        "category": "leaves"
+    },
+    
+    "leaf_hexagon": {
+        "axiom": "{.+F.+F.+F.+F.+F.+F.}",
+        "rules": {},
+        "angle": 60,
+        "iterations": 1,
+        "render_polygons": True,
+        "description": "Hexagonal leaf shape",
+        "category": "leaves"
     },
 }
 
@@ -224,7 +452,6 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
     # SUNFLOWER - FIXED! Dense golden spiral
     # =========================================================================
     "sunflower_head": {
-        # 200 florets in golden angle spiral - MUST view from above!
         "axiom": "".join(["[/(137.5)&'F]" for _ in range(200)]),
         "rules": {},
         "angle": 30,
@@ -514,6 +741,152 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
         "width_decay": 0.7,
         "description": "Crystal-like orthogonal growth"
     },
+    
+    # =========================================================================
+    # NEW FROM PDF: Simple 3D Tree
+    # =========================================================================
+    "tree_3d_simple": {
+        "axiom": "FFFA",
+        "rules": {
+            "A": "[B]////[B]////[B]",
+            "B": "&FFFA"
+        },
+        "angle": 28,
+        "roll_angle": 72,
+        "iterations": 5,
+        "base_width": 2.0,
+        "width_decay": 0.7,
+        "description": "Simple 3D tree with 3-branch whorls",
+        "category": "3d_trees"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Trees with Gravity/Tropism
+    # =========================================================================
+    "tree_gravity_none": {
+        "axiom": "FA",
+        "rules": {
+            "A": 'T"[&FA]////[&FA]'
+        },
+        "angle": 45,
+        "roll_angle": 72,
+        "iterations": 10,
+        "base_width": 2.0,
+        "width_decay": 0.6,
+        "length_decay": 0.6,
+        "tropism_strength": 0.0,
+        "tropism_direction": [0, -1, 0],
+        "description": "Symmetric tree without gravity",
+        "category": "3d_trees"
+    },
+    
+    "tree_gravity_moderate": {
+        "axiom": "FA",
+        "rules": {
+            "A": 'T"[&FA]////[&FA]'
+        },
+        "angle": 45,
+        "roll_angle": 72,
+        "iterations": 10,
+        "base_width": 2.0,
+        "width_decay": 0.6,
+        "length_decay": 0.6,
+        "tropism_strength": 0.2,
+        "tropism_direction": [0, -1, 0],
+        "description": "Tree with moderate gravity drooping",
+        "category": "3d_trees"
+    },
+    
+    "tree_gravity_strong": {
+        "axiom": "FA",
+        "rules": {
+            "A": 'T"[&FA]////[&FA]'
+        },
+        "angle": 45,
+        "roll_angle": 72,
+        "iterations": 10,
+        "base_width": 2.0,
+        "width_decay": 0.6,
+        "length_decay": 0.6,
+        "tropism_strength": 0.5,
+        "tropism_direction": [0, -1, 0],
+        "description": "Weeping tree with strong gravity",
+        "category": "3d_trees"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Tree with Leaves and Berries
+    # =========================================================================
+    "tree_leaves_berries": {
+        "axiom": "FFFA",
+        "rules": {
+            "A": '!"[&&J][B]////[&&J][B]////[&&J]B',
+            "B": "&FFFAK"
+        },
+        "angle": 28,
+        "roll_angle": 72,
+        "iterations": 5,
+        "base_width": 2.5,
+        "width_decay": 0.7,
+        "render_polygons": True,
+        "description": "Tree with polygon leaves (J) and berries (K)",
+        "category": "3d_trees"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Bush with leaves
+    # =========================================================================
+    "bush_3d_with_leaves": {
+        "axiom": "A",
+        "rules": {
+            "A": "[&FL!A]/////'[&FL!A]///////'[&FL!A]",
+            "F": "S/////F",
+            "S": "FL",
+            "L": "['''^^{-f+f+f-|-f+f+f}]"
+        },
+        "angle": 22.5,
+        "roll_angle": 22.5,
+        "iterations": 7,
+        "base_width": 2.0,
+        "width_decay": 0.707,
+        "render_polygons": True,
+        "description": "3D bush with polygon leaves",
+        "category": "3d_trees"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Spiral patterns
+    # =========================================================================
+    "spiral_3d_helix": {
+        "axiom": "A",
+        "rules": {
+            "A": "F/(137.5)[&&L]A",
+            "L": "[+F][-F]F"
+        },
+        "angle": 30,
+        "roll_angle": 137.5,
+        "iterations": 50,
+        "base_width": 0.6,
+        "width_decay": 0.98,
+        "description": "3D golden angle helix",
+        "category": "spirals"
+    },
+    
+    "spiral_tower": {
+        "axiom": "FA",
+        "rules": {
+            "A": "F[&&&'L]/(137.5)!A",
+            "L": "[++F][--F][+++F][---F]"
+        },
+        "angle": 30,
+        "roll_angle": 137.5,
+        "iterations": 80,
+        "base_width": 1.2,
+        "width_decay": 0.993,
+        "length_decay": 0.995,
+        "description": "Spiral vine tower - golden angle helix",
+        "category": "spirals"
+    },
 }
 
 
@@ -540,9 +913,16 @@ def get_preset(name: str, include_3d: bool = True) -> Dict[str, Any]:
         preset['is_3d'] = True
         return preset
     
+    # Also check parametric presets
+    if name_lower in PARAMETRIC_PRESETS:
+        preset = PARAMETRIC_PRESETS[name_lower].copy()
+        preset['is_parametric'] = True
+        return preset
+    
     all_presets = list(PRESETS_2D.keys())
     if include_3d:
         all_presets.extend(PRESETS_3D.keys())
+    all_presets.extend(PARAMETRIC_PRESETS.keys())
     available = ', '.join(sorted(all_presets))
     raise KeyError(f"Unknown preset '{name}'. Available presets: {available}")
 
@@ -565,19 +945,38 @@ def list_presets_by_category() -> Dict[str, List[str]]:
     return {
         "2D ABOP Classics": ["abop_1_24a", "abop_1_24b", "abop_1_24c",
                             "abop_1_24d", "abop_1_24e", "abop_1_24f"],
+        "2D ABOP Plants (alt)": ["abop_plant_a", "abop_plant_b", "abop_plant_c",
+                                 "abop_plant_d", "abop_plant_e", "abop_plant_f"],
         "2D Trees": ["tree_oak_spreading", "tree_willow_weeping", 
                      "tree_poplar_columnar", "tree_elm_vase"],
         "2D Ferns": ["fern_frond", "fern_fractal"],
-        "2D Artistic": ["dragon_curve", "koch_snowflake", "sierpinski"],
+        "2D Fractals": ["dragon_curve", "koch_snowflake", "sierpinski",
+                       "quadratic_koch", "quadratic_snowflake",
+                       "koch_curve_a", "koch_curve_b", "koch_curve_c",
+                       "koch_curve_d", "koch_curve_e", "koch_curve_f",
+                       "diamond_fractal", "hilbert_curve", "peano_curve",
+                       "gosper_curve", "sierpinski_arrowhead"],
+        "2D Leaves": ["leaf_cordate", "leaf_triangle", "leaf_hexagon"],
         "3D ABOP Figures": ["abop_1_25", "abop_1_26"],
         "3D Trees": ["tree_3d_oak", "tree_3d_pine", "tree_3d_birch",
                      "tree_3d_maple", "tree_3d_willow", "tree_3d_cypress",
-                     "honda_tree"],
+                     "honda_tree", "tree_3d_simple"],
+        "3D Trees (Tropism)": ["tree_gravity_none", "tree_gravity_moderate",
+                               "tree_gravity_strong", "tree_leaves_berries"],
         "3D Tropical": ["palm_3d", "bamboo_3d"],
         "3D Phyllotaxis": ["phyllotaxis_bowl", "sunflower_head", 
                           "sunflower_3d_bowl", "succulent_rosette"],
         "3D Ferns": ["fern_3d_frond", "fern_3d_spiral"],
-        "3D Artistic": ["spiral_vine", "coral_branch", "crystal_growth"],
+        "3D Spirals": ["spiral_vine", "spiral_3d_helix", "spiral_tower"],
+        "3D Artistic": ["coral_branch", "crystal_growth", "bush_3d_with_leaves"],
+        "Parametric Trees": ["monopodial_tree", "monopodial_tree_narrow",
+                            "monopodial_tree_spreading", "sympodial_tree",
+                            "sympodial_tree_weeping", "sympodial_tree_upright",
+                            "ternary_tree", "ternary_tree_golden", "ternary_tree_dense"],
+        "Parametric Stochastic": ["stochastic_plant", "stochastic_tree", 
+                                  "stochastic_bush", "stochastic_bush_abop"],
+        "Parametric Ferns": ["fern_simple", "fern_delayed", "fern_complex",
+                            "compound_leaf_alternate", "compound_leaf_complex"],
     }
 
 
@@ -586,6 +985,7 @@ def list_presets_by_category() -> Dict[str, List[str]]:
 # =============================================================================
 
 PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
+    # Original parametric presets
     "growing_tree_param": {
         "type": "parametric",
         "axiom": "A(1,10)",
@@ -661,6 +1061,354 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "angle": 120,
         "iterations": 1,
         "description": "Simple triangular polygon test"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Monopodial Tree (ABOP Figure 2.6)
+    # =========================================================================
+    "monopodial_tree": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&(c)B(l*e,w*h)]/(m)A(l*b,w*h)",
+            "B(l,w) -> !(w)F(l)[-(d)$C(l*e,w*h)]C(l*b,w*h)",
+            "C(l,w) -> !(w)F(l)[+(d)$B(l*e,w*h)]B(l*b,w*h)"
+        ],
+        "constants": {
+            "b": 0.9,
+            "e": 0.6,
+            "c": 45,
+            "d": 45,
+            "h": 0.707,
+            "m": 137.5
+        },
+        "angle": 45,
+        "iterations": 10,
+        "is_3d": True,
+        "description": "ABOP Fig 2.6 - Monopodial tree",
+        "category": "parametric_trees"
+    },
+    
+    "monopodial_tree_narrow": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&(c)B(l*e,w*h)]/(m)A(l*b,w*h)",
+            "B(l,w) -> !(w)F(l)[-(d)$C(l*e,w*h)]C(l*b,w*h)",
+            "C(l,w) -> !(w)F(l)[+(d)$B(l*e,w*h)]B(l*b,w*h)"
+        ],
+        "constants": {
+            "b": 0.9, "e": 0.9, "c": 45, "d": 50.6,
+            "h": 0.707, "m": 137.5
+        },
+        "iterations": 10,
+        "is_3d": True,
+        "description": "Monopodial tree - narrow crown variant",
+        "category": "parametric_trees"
+    },
+    
+    "monopodial_tree_spreading": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&(c)B(l*e,w*h)]/(m)A(l*b,w*h)",
+            "B(l,w) -> !(w)F(l)[-(d)$C(l*e,w*h)]C(l*b,w*h)",
+            "C(l,w) -> !(w)F(l)[+(d)$B(l*e,w*h)]B(l*b,w*h)"
+        ],
+        "constants": {
+            "b": 0.9, "e": 0.7, "c": 30, "d": -30,
+            "h": 0.707, "m": 137.5
+        },
+        "iterations": 10,
+        "is_3d": True,
+        "description": "Monopodial tree - spreading crown variant",
+        "category": "parametric_trees"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Sympodial Tree (ABOP Figure 2.7)
+    # =========================================================================
+    "sympodial_tree": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&(c)B(l*b,w*h)]/(180)[&(d)B(l*e,w*h)]",
+            "B(l,w) -> !(w)F(l)[+(c)$B(l*b,w*h)][-(d)$B(l*e,w*h)]"
+        ],
+        "constants": {
+            "b": 0.9,
+            "e": 0.7,
+            "c": 5,
+            "d": 65,
+            "h": 0.707
+        },
+        "angle": 45,
+        "iterations": 10,
+        "is_3d": True,
+        "description": "ABOP Fig 2.7 - Sympodial tree",
+        "category": "parametric_trees"
+    },
+    
+    "sympodial_tree_weeping": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&(c)B(l*b,w*h)]/(180)[&(d)B(l*e,w*h)]",
+            "B(l,w) -> !(w)F(l)[+(c)$B(l*b,w*h)][-(d)$B(l*e,w*h)]"
+        ],
+        "constants": {
+            "b": 0.9, "e": 0.7, "c": 10, "d": 60, "h": 0.707
+        },
+        "iterations": 10,
+        "is_3d": True,
+        "description": "Sympodial tree - weeping form",
+        "category": "parametric_trees"
+    },
+    
+    "sympodial_tree_upright": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&(c)B(l*b,w*h)]/(180)[&(d)B(l*e,w*h)]",
+            "B(l,w) -> !(w)F(l)[+(c)$B(l*b,w*h)][-(d)$B(l*e,w*h)]"
+        ],
+        "constants": {
+            "b": 0.9, "e": 0.8, "c": 20, "d": 50, "h": 0.707
+        },
+        "iterations": 10,
+        "is_3d": True,
+        "description": "Sympodial tree - upright form",
+        "category": "parametric_trees"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Ternary Tree (ABOP Figure 2.8)
+    # =========================================================================
+    "ternary_tree": {
+        "type": "parametric",
+        "axiom": "F(0.5,1)A",
+        "productions": [
+            "A -> F(0.5,1)[&(c)F(0.5,1)A]/(b)[&(c)F(0.5,1)A]/(e)[&(c)F(0.5,1)A]",
+            "F(l,w) -> F(l*d,w*h)"
+        ],
+        "constants": {
+            "b": 94.64,
+            "e": 132.63,
+            "c": 18.95,
+            "d": 1.109,
+            "h": 1.732
+        },
+        "angle": 20,
+        "iterations": 8,
+        "tropism_strength": 0.15,
+        "tropism_direction": [0, -1, 0],
+        "is_3d": True,
+        "description": "ABOP Fig 2.8 - Ternary tree with tropism",
+        "category": "parametric_trees"
+    },
+    
+    "ternary_tree_golden": {
+        "type": "parametric",
+        "axiom": "F(0.5,1)A",
+        "productions": [
+            "A -> F(0.5,1)[&(c)F(0.5,1)A]/(b)[&(c)F(0.5,1)A]/(e)[&(c)F(0.5,1)A]",
+            "F(l,w) -> F(l*d,w*h)"
+        ],
+        "constants": {
+            "b": 137.5, "e": 137.5,
+            "c": 18.95, "d": 1.109, "h": 1.452
+        },
+        "iterations": 8,
+        "tropism_strength": 0.12,
+        "tropism_direction": [0, -1, 0],
+        "is_3d": True,
+        "description": "Ternary tree with golden angle divergence",
+        "category": "parametric_trees"
+    },
+    
+    "ternary_tree_dense": {
+        "type": "parametric",
+        "axiom": "F(0.5,1)A",
+        "productions": [
+            "A -> F(0.5,1)[&(c)F(0.5,1)A]/(b)[&(c)F(0.5,1)A]/(e)[&(c)F(0.5,1)A]",
+            "F(l,w) -> F(l*d,w*h)"
+        ],
+        "constants": {
+            "b": 112.5, "e": 157.5,
+            "c": 22.5, "d": 1.079, "h": 1.653
+        },
+        "iterations": 8,
+        "tropism_strength": 0.21,
+        "tropism_direction": [0, -1, 0],
+        "is_3d": True,
+        "description": "Ternary tree - dense variant",
+        "category": "parametric_trees"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Stochastic L-Systems
+    # =========================================================================
+    "stochastic_plant": {
+        "type": "parametric",
+        "axiom": "F",
+        "productions": [
+            {"rule": "F -> F[-F]F[+F]F", "probability": 0.33},
+            {"rule": "F -> F[-F]F", "probability": 0.33},
+            {"rule": "F -> F[+F]F", "probability": 0.34}
+        ],
+        "angle": 28,
+        "iterations": 6,
+        "description": "ABOP p.28 - Stochastic L-system",
+        "category": "stochastic"
+    },
+    
+    "stochastic_bush": {
+        "type": "parametric",
+        "axiom": "F",
+        "productions": [
+            {"rule": "F -> FF-[-F+F+F]+[+F-F-F]", "probability": 0.5},
+            {"rule": "F -> FF-[-F+F]+[+F-F]", "probability": 0.3},
+            {"rule": "F -> F[+F][-F]", "probability": 0.2}
+        ],
+        "angle": 22.5,
+        "iterations": 4,
+        "description": "Stochastic bush with varied branching",
+        "category": "stochastic"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Ferns (ABOP Chapter 5)
+    # =========================================================================
+    "fern_simple": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(i) : i > 0 -> A(i-1)",
+            "A(i) : i == 0 -> F(1)[+A(b)][-A(b)]F(1)A(0)",
+            "F(a) -> F(a*c)"
+        ],
+        "constants": {
+            "b": 0,
+            "c": 2
+        },
+        "angle": 45,
+        "iterations": 9,
+        "description": "Simple pinnate fern",
+        "category": "ferns"
+    },
+    
+    "fern_delayed": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(i) : i > 0 -> A(i-1)",
+            "A(i) : i == 0 -> F(1)[+A(b)][-A(b)]F(1)A(0)",
+            "F(a) -> F(a*c)"
+        ],
+        "constants": {"b": 2, "c": 1.36},
+        "angle": 45,
+        "iterations": 18,
+        "description": "Fern with apical delay",
+        "category": "ferns"
+    },
+    
+    "fern_complex": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(i) : i > 0 -> A(i-1)",
+            "A(i) : i == 0 -> F(1)[+A(b)][-A(b)]F(1)A(0)",
+            "F(a) -> F(a*c)"
+        ],
+        "constants": {"b": 7, "c": 1.17},
+        "angle": 45,
+        "iterations": 30,
+        "description": "Complex fern with high delay",
+        "category": "ferns"
+    },
+    
+    "compound_leaf_alternate": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(i) : i > 0 -> A(i-1)",
+            "A(i) : i == 0 -> F(1)[+A(b)]F(1)B(0)",
+            "B(i) : i > 0 -> B(i-1)",
+            "B(i) : i == 0 -> F(1)[-B(b)]F(1)A(0)",
+            "F(a) -> F(a*c)"
+        ],
+        "constants": {"b": 1, "c": 1.36},
+        "angle": 45,
+        "iterations": 18,
+        "description": "Compound leaf with alternating branching",
+        "category": "ferns"
+    },
+    
+    "compound_leaf_complex": {
+        "type": "parametric",
+        "axiom": "A(0)",
+        "productions": [
+            "A(i) : i > 0 -> A(i-1)",
+            "A(i) : i == 0 -> F(1)[+A(b)]F(1)B(0)",
+            "B(i) : i > 0 -> B(i-1)",
+            "B(i) : i == 0 -> F(1)[-B(b)]F(1)A(0)",
+            "F(a) -> F(a*c)"
+        ],
+        "constants": {"b": 7, "c": 1.13},
+        "angle": 45,
+        "iterations": 38,
+        "description": "Complex compound leaf",
+        "category": "ferns"
+    },
+    
+    # =========================================================================
+    # NEW FROM PDF: Phyllotaxis Patterns
+    # =========================================================================
+    "phyllotaxis_basic": {
+        "type": "parametric",
+        "axiom": "A(1)",
+        "productions": [
+            "A(n) -> +(137.5)f(n^0.5)JA(n+1)"
+        ],
+        "angle": 137.5,
+        "iterations": 200,
+        "description": "Basic Vogel spiral phyllotaxis",
+        "category": "phyllotaxis"
+    },
+    
+    "phyllotaxis_137_3": {
+        "type": "parametric",
+        "axiom": "A(1)",
+        "productions": [
+            "A(n) -> +(137.3)f(n^0.5)JA(n+1)"
+        ],
+        "iterations": 200,
+        "description": "Phyllotaxis with 137.3° - shows spiral arms",
+        "category": "phyllotaxis"
+    },
+    
+    "phyllotaxis_137_6": {
+        "type": "parametric",
+        "axiom": "A(1)",
+        "productions": [
+            "A(n) -> +(137.6)f(n^0.5)JA(n+1)"
+        ],
+        "iterations": 200,
+        "description": "Phyllotaxis with 137.6° - opposite spiral arms",
+        "category": "phyllotaxis"
+    },
+    
+    "phyllotaxis_dome": {
+        "type": "parametric",
+        "axiom": "A(1)",
+        "productions": [
+            "A(n) -> /(137.5)[&(pitch)f(n^0.5)K]A(n+1)"
+        ],
+        "constants": {"pitch": 60},
+        "iterations": 100,
+        "is_3d": True,
+        "description": "3D dome phyllotaxis pattern",
+        "category": "phyllotaxis"
     },
 }
 
