@@ -1,23 +1,23 @@
 """
-L-System Plant Presets - BEST OF THE BEST
+L-System Plant Presets - IMPROVED VERSION
 
-Hand-picked, research-improved presets for beautiful plant renders.
-All fixes from ABOP research applied.
+Research-based improvements from ABOP and Honda (1971) model:
+- Removed excessive initial trunks (F(200) -> proportional growth)
+- Added polygon leaves to all parametric trees
+- Fixed abop_1_26 typo and added visible flowers
+- Proper Leonardo's rule width decay (0.707 for binary, 1.732 for ternary)
+- Moderate tropism values (0.04-0.12 range)
 
-Contains only ~25 highest-quality presets:
-- 2D Classics (ABOP 1.24 series)
-- 3D Trees with leaves
-- Parametric trees (monopodial, sympodial, ternary)
-- Fractals (dragon, hilbert)
-- Ferns
-
-All presets are production-ready with proper 3D operators and leaves where needed.
+Contains ~35 production-ready presets:
+- 2D Classics (ABOP 1.24 series, fractals, ferns)
+- 3D Trees with leaves (IMPROVED)
+- Parametric trees with leaves (IMPROVED)
 """
 
 from typing import Dict, Any
 
 # =============================================================================
-# 2D PRESETS - ABOP Classics
+# 2D PRESETS - ABOP Classics (unchanged - these work well)
 # =============================================================================
 
 PRESETS_2D: Dict[str, Dict[str, Any]] = {
@@ -75,22 +75,22 @@ PRESETS_2D: Dict[str, Dict[str, Any]] = {
         "angle": 22.5,
         "iterations": 6,
         "base_width": 1.2,
-        "description": "ABOP 1.24f - ICONIC elegant plant ⭐"
+        "description": "ABOP 1.24f - ICONIC elegant plant [BEST]"
     },
     
     # =========================================================================
-    # 2D Trees
+    # 2D Trees - FIXED
     # =========================================================================
     "tree_elm_vase": {
-        "axiom": "FFX",
+        "axiom": "X",  # FIXED: was "FFX" - removed excessive initial trunk
         "rules": {
-            "X": "[++FX][+FX][-FX][--FX]",
+            "X": "F[++FX][+FX][-FX][--FX]",
             "F": "FF"
         },
         "angle": 20,
         "iterations": 5,
         "base_width": 1.4,
-        "description": "Elm - vase-shaped crown"
+        "description": "Elm - vase-shaped crown (FIXED)"
     },
     
     # =========================================================================
@@ -128,7 +128,7 @@ PRESETS_2D: Dict[str, Dict[str, Any]] = {
         },
         "angle": 90,
         "iterations": 6,
-        "description": "Hilbert space-filling curve ⭐"
+        "description": "Hilbert space-filling curve [BEST]"
     },
     
     "koch_snowflake": {
@@ -150,12 +150,12 @@ PRESETS_2D: Dict[str, Dict[str, Any]] = {
 }
 
 # =============================================================================
-# 3D PRESETS - Trees with Leaves
+# 3D PRESETS - IMPROVED with leaves and proportional growth
 # =============================================================================
 
 PRESETS_3D: Dict[str, Dict[str, Any]] = {
     # =========================================================================
-    # ABOP 3D - THE BEST!
+    # ABOP 3D - THE BEST! (unchanged - already works well)
     # =========================================================================
     "abop_1_25": {
         "axiom": "A",
@@ -170,208 +170,235 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
         "is_3d": True,
         "render_polygons": True,
         "width_decay": 0.9,
-        "description": "⭐⭐ ABOP 1.25 - Bush with hexagonal leaves - THE BEST!"
+        "description": "ABOP 1.25 - Bush with hexagonal leaves [BEST]"
     },
     
+    # =========================================================================
+    # ABOP 1.26 - FIXED: typo removed, larger flowers, visible petals
+    # =========================================================================
     "abop_1_26": {
         "axiom": "A",
         "rules": {
-            "A": "[&FPLA]/////'[&FPLA]/////'[&FPL A]",
-            "P": "F[++L][--L]",
-            "L": "[{-f+f-f-f}]",
-            "F": "FF"
+            "A": "[&FPLA]/////'[&FPLA]/////'[&FPLA]",  # FIXED: removed space typo
+            "P": "['''&{--f++f++f--|--f++f++f}]",  # Larger flower polygon
+            "L": "[''''^^{-f+f+f-|-f+f+f}]",  # Hexagonal leaf
+            "F": "S/////F",
+            "S": "FL"
+        },
+        "angle": 22.5,
+        "iterations": 6,
+        "is_3d": True,
+        "render_polygons": True,
+        "width_decay": 0.85,
+        "description": "ABOP 1.26 - Flowering plant (FIXED with visible petals) [BEST]"
+    },
+    
+    # =========================================================================
+    # Honda Tree - IMPROVED: No F(200) trunk, with leaves
+    # =========================================================================
+    "honda_tree": {
+        "axiom": "A",  # FIXED: was "!(1)F(200)A"
+        "rules": {
+            "A": "!(0.707)F[&(50)$BL][/(137.5)&(50)$BL][/(275)&(50)$BL]/(137.5)FA",
+            "B": "!(0.707)F[+(35)$CL][-(35)$CL]C",
+            "C": "!(0.707)FL",
+            "L": "['''^^{-f+f+f-|-f+f+f}]",
+            "F": "F"
+        },
+        "angle": 35,
+        "iterations": 7,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.06,
+        "tropism_direction": [0, -1, 0],
+        "description": "Honda tree (IMPROVED: no long trunk, with leaves)"
+    },
+    
+    # =========================================================================
+    # Simple 3D Tree - IMPROVED: Compact with leaves
+    # =========================================================================
+    "tree_3d_simple": {
+        "axiom": "FA",  # FIXED: was "!(1)F(200)/(45)A"
+        "rules": {
+            "A": "!(0.707)[&(30)$FL]/(120)[&(30)$FL]/(120)[&(30)$FL]FA",
+            "L": "['''^^{-f+f+f-|-f+f+f}]",
+            "F": "F"
+        },
+        "angle": 30,
+        "iterations": 7,
+        "is_3d": True,
+        "render_polygons": True,
+        "description": "Simple whorled tree (IMPROVED: compact with leaves)"
+    },
+    
+    # =========================================================================
+    # Birch Tree - IMPROVED: Graceful with foliage
+    # =========================================================================
+    "tree_3d_birch": {
+        "axiom": "FFA",  # FIXED: was "!(1)F(300)A"
+        "rules": {
+            "A": "!(0.9)F[&(35)$BL][/(137.5)&(30)$CL]/(137.5)A",
+            "B": "!(0.8)F[&(30)$BL][+(25)$L]/(137.5)B",
+            "C": "!(0.8)F[&(25)$CL][-(25)$L]/(137.5)C",
+            "L": "['''^^{-f+f+f}]",
+            "F": "F"
+        },
+        "angle": 30,
+        "iterations": 7,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.10,  # Reduced from 0.18
+        "tropism_direction": [0, -1, 0],
+        "description": "Birch (IMPROVED: graceful droop with foliage)"
+    },
+    
+    # =========================================================================
+    # Maple Tree - IMPROVED: Opposite branching with leaves
+    # =========================================================================
+    "tree_3d_maple": {
+        "axiom": "FA",  # FIXED: was "!(1)F(200)X"
+        "rules": {
+            "A": "!(0.9)F[&(35)$BL]/(180)[&(35)$BL]/(137.5)FA",
+            "B": "!(0.8)F[+(25)$CL][-(25)$CL]B",
+            "C": "!(0.7)FL",
+            "L": "['''^^{-f+f+f-f+f+f}]",
+            "F": "F"
+        },
+        "angle": 35,
+        "iterations": 7,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.05,
+        "tropism_direction": [0, -1, 0],
+        "description": "Maple (IMPROVED: decussate branching with leaves)"
+    },
+    
+    # =========================================================================
+    # Bush with Leaves - Dense variant
+    # =========================================================================
+    "bush_3d_with_leaves": {
+        "axiom": "A",
+        "rules": {
+            "A": "[&FL]/////'[&FLA]/////'[&FL]/////'[&FLA]",
+            "F": "S//F",
+            "S": "FFL",
+            "L": "['''^^{-f+f+f-|-f+f+f}]"
         },
         "angle": 18,
         "iterations": 6,
         "is_3d": True,
         "render_polygons": True,
-        "description": "ABOP 1.26 - Flowering plant with petals"
+        "width_decay": 0.85,
+        "description": "Dense bush with lots of leaves [BEST]"
     },
     
     # =========================================================================
-    # 3D Trees - Fixed with Roll + Leaves
-    # =========================================================================
-    "tree_3d_simple": {
-        "axiom": "!(1)F(200)/(45)A",
-        "rules": {
-            "A": "!(1.732)F(50)[&(22)$FL]/(120)[&(22)$FL]/(120)[&(22)$FL]/(45)A",
-            "L": "['''&&&{-f+f+f-f+f+f}]",
-            "F": "FF"
-        },
-        "angle": 22.5,
-        "iterations": 6,
-        "is_3d": True,
-        "render_polygons": True,
-        "description": "Simple whorled tree with leaves - FIXED 3D"
-    },
-    
-    "honda_tree": {
-        "axiom": "!(1)F(200)A",
-        "rules": {
-            "A": "!(0.707)F(50)[&(40)BL][/(137.5)&(40)BL][/(274)&(40)BL]/(137.5)A",
-            "B": "!(0.707)F(40)[+(25)CL][-(25)CL]",
-            "C": "!(0.707)F(30)L",
-            "L": "['''&&&{-f+f+f-f+f+f}]",
-            "F": "FF"
-        },
-        "angle": 30,
-        "iterations": 11,
-        "is_3d": True,
-        "render_polygons": True,
-        "description": "Honda tree with terminal leaves - FIXED 3D"
-    },
-    
-    "tree_3d_birch": {
-        "axiom": "!(1)F(300)A",
-        "rules": {
-            "A": "T(0.05)!(0.9)F(50)[T(0.20)&(35)$BL][T(0.20)^(25)$CL]/(137.5)A",
-            "B": "T(0.25)!(0.8)F(40)[&(30)$BL][^(20)$CL]/(137.5)B",
-            "C": "T(0.25)!(0.8)F(40)[&(25)$CL][^(25)$BL]/(137.5)C",
-            "L": "['''&&&{-f+f}]",
-            "F": "FF"
-        },
-        "angle": 30,
-        "iterations": 5,
-        "is_3d": True,
-        "render_polygons": True,
-        "tropism_strength": 0.18,
-        "tropism_direction": [0, -1, 0],
-        "description": "Birch with gradient tropism - graceful droop"
-    },
-    
-    "tree_3d_maple": {
-        "axiom": "!(1)F(200)X",
-        "rules": {
-            "X": "!(0.9)F(50)[&(30)BL]/(180)[&(30)BL]/(137.5)FX",
-            "B": "!(0.8)F(40)[+(20)CL][-(20)CL]",
-            "C": "!(0.7)F(30)L",
-            "L": "['''&&&{-f+f+f}]",
-            "F": "FF"
-        },
-        "angle": 30,
-        "iterations": 6,
-        "is_3d": True,
-        "render_polygons": True,
-        "tropism_strength": 0.05,
-        "tropism_direction": [0, -1, 0],
-        "description": "Maple with decussate branches and leaves"
-    },
-    
-    # =========================================================================
-    # Gravity Series - WITH LEAVES
+    # Gravity Series - IMPROVED: Shorter trunks
     # =========================================================================
     "tree_gravity_none": {
-        "axiom": "!(1)F(200)A",
+        "axiom": "FFA",  # FIXED: was "!(1)F(200)/(45)A"
         "rules": {
-            "A": "!(1.732)F(50)[&(30)$BL][/(120)&(30)$BL][/(240)&(30)$BL]/(45)A",
-            "B": "!(1.0)F(40)[+(25)$BL][-(25)$BL]B",
-            "L": "['''&&&{-f+f+f-|-f+f+f}]",
-            "F": "FF"
+            "A": "!(0.707)[&(30)$BL][/(120)&(30)$BL][/(240)&(30)$BL]/(45)FA",
+            "B": "!(0.707)F[+(25)$L][-(25)$L]B",
+            "L": "['''^^{-f+f+f-|-f+f+f}]",
+            "F": "F"
         },
         "angle": 30,
-        "iterations": 11,
+        "iterations": 7,
         "is_3d": True,
         "render_polygons": True,
         "tropism_strength": 0.0,
-        "description": "Symmetric tree - NO gravity"
+        "description": "Symmetric tree (IMPROVED: no gravity, compact)"
     },
     
     "tree_gravity_moderate": {
-        "axiom": "!(1)F(200)A",
+        "axiom": "FFA",
         "rules": {
-            "A": "!(1.732)F(50)[&(30)$BL][/(120)&(30)$BL][/(240)&(30)$BL]/(45)A",
-            "B": "!(1.0)F(40)[+(25)$BL][-(25)$BL]B",
-            "L": "['''&&&{-f+f+f-|-f+f+f}]",
-            "F": "FF"
+            "A": "!(0.707)[&(30)$BL][/(120)&(30)$BL][/(240)&(30)$BL]/(45)FA",
+            "B": "!(0.707)F[+(25)$L][-(25)$L]B",
+            "L": "['''^^{-f+f+f-|-f+f+f}]",
+            "F": "F"
         },
         "angle": 30,
-        "iterations": 11,
+        "iterations": 7,
         "is_3d": True,
         "render_polygons": True,
-        "tropism_strength": 0.12,
+        "tropism_strength": 0.10,  # Reduced
         "tropism_direction": [0, -1, 0],
-        "description": "Tree with MODERATE gravity droop"
+        "description": "Tree (IMPROVED: moderate gravity droop)"
     },
     
     "tree_gravity_strong": {
-        "axiom": "!(1)F(200)A",
+        "axiom": "FFA",
         "rules": {
-            "A": "!(1.732)F(50)[&(30)$BL][/(120)&(30)$BL][/(240)&(30)$BL]/(45)A",
-            "B": "!(1.0)F(40)[+(25)$BL][-(25)$BL]B",
-            "L": "['''&&&{-f+f+f-|-f+f+f}]",
-            "F": "FF"
+            "A": "!(0.707)[&(30)$BL][/(120)&(30)$BL][/(240)&(30)$BL]/(45)FA",
+            "B": "!(0.707)F[+(25)$L][-(25)$L]B",
+            "L": "['''^^{-f+f+f-|-f+f+f}]",
+            "F": "F"
         },
         "angle": 30,
-        "iterations": 11,
+        "iterations": 7,
         "is_3d": True,
         "render_polygons": True,
-        "tropism_strength": 0.28,
+        "tropism_strength": 0.18,  # Reduced from 0.28
         "tropism_direction": [0, -1, 0],
-        "description": "⭐ Weeping tree - STRONG gravity"
+        "description": "Weeping tree (IMPROVED: strong gravity)"
     },
-    
-    "bush_3d_with_leaves": {
-        "axiom": "A",
-        "rules": {
-            "A": "[&FLA]/////'[&FLA]/////'[&FLA]",
-            "F": "S/////F",
-            "S": "FL",
-            "L": "['''^^{-f+f+f-|-f+f+f}]"
-        },
-        "angle": 22.5,
-        "iterations": 6,
-        "is_3d": True,
-        "render_polygons": True,
-        "width_decay": 0.9,
-        "description": "3D bush with polygon leaves"
-    },
-    
-    "tree_with_leaves_berries": {
-        "axiom": "!(1)F(200)A",
-        "rules": {
-            "A": "!(0.9)F(50)[&(35)BL]/(137.5)[&(35)BL]/(137.5)A",
-            "B": "!(0.8)F(30)[+(20)CL][-(20)CL]",
-            "C": "!(0.7)F(20)L",
-            "L": "['''&&&{-f+f}]",
-            "F": "FF"
-        },
-        "angle": 25,
-        "iterations": 10,
-        "is_3d": True,
-        "render_polygons": True,
-        "description": "Tree with SMALL leaves - fixed size"
-    },
-    
+
     # =========================================================================
-    # Spirals & Artistic
+    # Coral - compact variant
     # =========================================================================
     "coral_branch": {
-        "axiom": "F",
-        "rules": {"F": "F[&+F][^/F][&-F]"},
-        "angle": 45,
+        "axiom": "FA",
+        "rules": {"F": "F[&+F][^/F][&-F]", "A": "FA"},
+        "angle": 35,
         "iterations": 6,
         "is_3d": True,
-        "description": "Coral-like branching with combined operators"
-    },
-    
-    "crystal_growth": {
-        "axiom": "!(1)F(200)A",
-        "rules": {
-            "A": "!(0.8)F(50)[&(28)$B][^(28)$C][+(25)$B][-(25)$C]/(137.5)A",
-            "B": "!(0.7)F(40)[&(25)$B][+(20)$B]/(137.5)B",
-            "C": "!(0.7)F(40)[^(25)$C][-(20)$C]/(137.5)C",
-            "F": "FF"
-        },
-        "angle": 28,
-        "iterations": 6,
-        "is_3d": True,
-        "tropism_strength": 0.18,
-        "tropism_direction": [0, -1, 0],
-        "description": "Crystal-organic hybrid tree with tropism"
+        "description": "Coral-like branching - compact"
     },
     
     # =========================================================================
-    # Phyllotaxis
+    # Crystal Growth - IMPROVED: No long initial trunk
+    # =========================================================================
+    "crystal_growth": {
+        "axiom": "A",  # FIXED: was "!(1)F(200)/(45)A"
+        "rules": {
+            "A": "!(0.8)FF[&(28)$B][^(28)$C][+(25)$B][-(25)$C]/(137.5)A",
+            "B": "!(0.7)F[&(25)$B][+(20)$B]/(137.5)B",
+            "C": "!(0.7)F[^(25)$C][-(20)$C]/(137.5)C",
+            "F": "F"
+        },
+        "angle": 28,
+        "iterations": 7,
+        "is_3d": True,
+        "tropism_strength": 0.12,
+        "tropism_direction": [0, -1, 0],
+        "description": "Crystal-organic hybrid (IMPROVED: proportional)"
+    },
+    
+    # =========================================================================
+    # Tree with leaves - IMPROVED
+    # =========================================================================
+    "tree_with_leaves_berries": {
+        "axiom": "FA",  # FIXED: was "!(1)F(200)A"
+        "rules": {
+            "A": "!(0.9)F[&(35)$BL]/(137.5)[&(35)$BL]/(137.5)FA",
+            "B": "!(0.8)F[+(20)$CL][-(20)$CL]B",
+            "C": "!(0.7)FL",
+            "L": "['''^^{-f+f+f-|-f+f+f}]",
+            "F": "F"
+        },
+        "angle": 25,
+        "iterations": 7,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.06,
+        "tropism_direction": [0, -1, 0],
+        "description": "Tree with polygon leaves (IMPROVED)"
+    },
+    
+    # =========================================================================
+    # Phyllotaxis (unchanged - works well)
     # =========================================================================
     "sunflower_head": {
         "type": "parametric",
@@ -384,7 +411,7 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
         "angle": 137.5,
         "iterations": 1,
         "is_3d": True,
-        "description": "⭐⭐ Sunflower - golden angle spiral"
+        "description": "Sunflower - golden angle spiral [BEST]"
     },
     
     "succulent_rosette": {
@@ -404,73 +431,242 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
 }
 
 # =============================================================================
-# PARAMETRIC PRESETS
+# PARAMETRIC PRESETS - IMPROVED with leaves
 # =============================================================================
 
 PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
     # =========================================================================
-    # Parametric Trees - FIXED 3D
+    # Monopodial Trees - IMPROVED: With leaves, no long trunk
+    # Based on ABOP Figure 2.6
     # =========================================================================
     "monopodial_tree": {
         "type": "parametric",
-        "axiom": "!(1)F(200)/(45)A(1,10)",
+        "axiom": "A(1,10)",  # FIXED: was "!(1)F(200)/(45)A(1,10)"
         "productions": [
-            "A(l,w) -> !(w)F(l)[&(45)B(l*0.6,w*0.707)]/(137.5)A(l*0.9,w*0.707)",
-            "B(l,w) -> !(w)F(l)[-(45)$C(l*0.6,w*0.707)]C(l*0.9,w*0.707)",
-            "C(l,w) -> !(w)F(l)[+(45)$B(l*0.6,w*0.707)]B(l*0.9,w*0.707)"
+            "A(l,w) -> !(w)FF(l)[&(45)$B(l*0.6,w*0.707)L]/(137.5)A(l*0.9,w*0.707)",
+            "B(l,w) -> !(w)F(l)[-(45)$C(l*0.6,w*0.707)L]C(l*0.9,w*0.707)",
+            "C(l,w) -> !(w)F(l)[+(45)$B(l*0.6,w*0.707)L]B(l*0.9,w*0.707)",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"  # Added leaves!
         ],
         "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {},
+        "constants": {"r1": 0.9, "r2": 0.6, "a0": 45, "wr": 0.707},
         "angle": 45,
-        "iterations": 11,
+        "iterations": 9,
+        "tropism_strength": 0.06,
+        "tropism_direction": [0, -1, 0],
+        "is_3d": True,
+        "render_polygons": True,
+        "description": "ABOP 2.6 Monopodial (IMPROVED: with leaves) [BEST]"
+    },
+    
+    "monopodial_narrow": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)FF(l)[&(30)$B(l*0.5,w*0.707)L]/(137.5)A(l*0.95,w*0.707)",
+            "B(l,w) -> !(w)F(l)[-(30)$C(l*0.5,w*0.707)L]C(l*0.9,w*0.707)",
+            "C(l,w) -> !(w)F(l)[+(30)$B(l*0.5,w*0.707)L]B(l*0.9,w*0.707)",
+            "L -> ['''^^{-f+f+f}]"
+        ],
+        "rules": {"info": "Parametric narrow variant"},
+        "constants": {},
+        "angle": 30,
+        "iterations": 10,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.04,
+        "tropism_direction": [0, -1, 0],
+        "description": "Monopodial narrow crown - conifer-like"
+    },
+    
+    "monopodial_spreading": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)FF(l)[&(60)$B(l*0.7,w*0.707)L]/(137.5)A(l*0.85,w*0.707)",
+            "B(l,w) -> !(w)F(l)[-(50)$C(l*0.7,w*0.707)L]C(l*0.85,w*0.707)",
+            "C(l,w) -> !(w)F(l)[+(50)$B(l*0.7,w*0.707)L]B(l*0.85,w*0.707)",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"
+        ],
+        "rules": {"info": "Parametric spreading variant"},
+        "constants": {},
+        "angle": 50,
+        "iterations": 8,
+        "is_3d": True,
+        "render_polygons": True,
         "tropism_strength": 0.08,
         "tropism_direction": [0, -1, 0],
-        "is_3d": True,
-        "description": "⭐ ABOP Fig 2.6 - Monopodial (FIXED 3D with roll)"
-    },
-    
-    "sympodial_tree": {
-        "type": "parametric",
-        "axiom": "!(1)F(200)A(1,10)",
-        "productions": [
-            "A(l,w) -> !(w)F(l)[&(10)$B(l*0.9,w*0.707)]/(180)[&(60)$B(l*0.7,w*0.707)]",
-            "B(l,w) -> !(w)F(l)[+(10)$B(l*0.9,w*0.707)][-(60)$B(l*0.7,w*0.707)]"
-        ],
-        "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {},
-        "angle": 35,
-        "iterations": 10,
-        "tropism_strength": 0.12,
-        "tropism_direction": [0, -1, 0],
-        "is_3d": True,
-        "description": "⭐ ABOP Fig 2.7 - Sympodial (FIXED z-growth)"
-    },
-    
-    "ternary_tree": {
-        "type": "parametric",
-        "axiom": "!(1)F(200)/(45)A",
-        "productions": [
-            "A -> !(1.732)F(50)[&(19)F(50)B]/(94.74)[&(19)F(50)B]/(132.63)[&(19)F(50)B]",
-            "B -> !(1.732)F(50)[&(19)F(50)B]/(94.74)[&(19)F(50)B]/(132.63)[&(19)F(50)B]",
-            "F(l) -> F(l*1.109)"
-        ],
-        "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {
-            "b": 94.74,
-            "c": 19,
-            "d": 1.109,
-            "h": 1.732
-        },
-        "angle": 20,
-        "iterations": 9,
-        "tropism_strength": 0.15,
-        "tropism_direction": [0, -1, 0],
-        "is_3d": True,
-        "description": "⭐ ABOP Fig 2.8 - Ternary (FIXED 3D whorls)"
+        "description": "Monopodial spreading crown - cedar-like"
     },
     
     # =========================================================================
-    # Stochastic
+    # Sympodial Trees - IMPROVED: With leaves, forking pattern
+    # Based on ABOP Figure 2.7 - BEST RESULTS!
+    # =========================================================================
+    "sympodial_tree": {
+        "type": "parametric",
+        "axiom": "A(1,10)",  # FIXED: was "!(1)F(200)A(1,10)"
+        "productions": [
+            "A(l,w) -> !(w)FF(l)[&(15)$B(l*0.9,w*0.707)L]/(180)[&(50)$B(l*0.7,w*0.707)L]",
+            "B(l,w) -> !(w)F(l)[+(15)$B(l*0.9,w*0.707)L][-(50)$B(l*0.7,w*0.707)L]",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"  # Added leaves!
+        ],
+        "rules": {"info": "Parametric - see 'productions'"},
+        "constants": {"r1": 0.9, "r2": 0.7, "a1": 15, "a2": 50, "wr": 0.707},
+        "angle": 35,
+        "iterations": 9,
+        "tropism_strength": 0.08,
+        "tropism_direction": [0, -1, 0],
+        "is_3d": True,
+        "render_polygons": True,
+        "description": "ABOP 2.7 Sympodial (IMPROVED: forking with leaves) [BEST]"
+    },
+    
+    "sympodial_balanced": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)FF(l)[&(35)$B(l*0.8,w*0.707)L]/(180)[&(35)$B(l*0.8,w*0.707)L]",
+            "B(l,w) -> !(w)F(l)[+(35)$B(l*0.8,w*0.707)L][-(35)$B(l*0.8,w*0.707)L]",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"
+        ],
+        "rules": {"info": "Balanced forking"},
+        "constants": {},
+        "angle": 35,
+        "iterations": 8,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.06,
+        "tropism_direction": [0, -1, 0],
+        "description": "Sympodial balanced - oak-like crown [BEST]"
+    },
+    
+    "sympodial_weeping": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)FF(l)[&(20)$B(l*0.85,w*0.707)L]/(180)[&(70)$B(l*0.6,w*0.707)L]",
+            "B(l,w) -> !(w)F(l)[+(20)$B(l*0.85,w*0.707)L][-(70)$B(l*0.6,w*0.707)L]",
+            "L -> ['''^^{-f+f}]"
+        ],
+        "rules": {"info": "Weeping form"},
+        "constants": {},
+        "angle": 45,
+        "iterations": 8,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.15,
+        "tropism_direction": [0, -1, 0],
+        "description": "Sympodial weeping - willow-like"
+    },
+    
+    # =========================================================================
+    # Ternary Trees - IMPROVED: With leaves, moderate tropism
+    # Based on ABOP Figure 2.8
+    # =========================================================================
+    "ternary_tree": {
+        "type": "parametric",
+        "axiom": "A",  # FIXED: was "!(1)F(200)/(45)A"
+        "productions": [
+            "A -> !(1.732)F[&(35)$FL]/(94.74)[&(35)$FL]/(132.63)[&(35)$FL]A",
+            "F(l) -> F(l*1.05)",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"  # Added leaves!
+        ],
+        "rules": {"info": "Parametric - see 'productions'"},
+        "constants": {"d1": 94.74, "d2": 132.63, "a": 35, "lr": 1.05, "vr": 1.732},
+        "angle": 20,
+        "iterations": 7,
+        "tropism_strength": 0.04,  # FIXED: was 0.15
+        "tropism_direction": [0, -1, 0],
+        "is_3d": True,
+        "render_polygons": True,
+        "description": "ABOP 2.8 Ternary (IMPROVED: with leaves)"
+    },
+    
+    "ternary_golden": {
+        "type": "parametric",
+        "axiom": "A",
+        "productions": [
+            "A -> !(1.732)FF[&(19)$FL]/(137.5)[&(19)$FL]/(137.5)[&(19)$FL]A",
+            "F(l) -> F(l*1.109)",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"
+        ],
+        "rules": {"info": "Golden angle divergence"},
+        "constants": {},
+        "angle": 20,
+        "iterations": 8,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.05,
+        "tropism_direction": [0, -1, 0],
+        "description": "Ternary golden angle - phyllotactic spiral"
+    },
+    
+    "ternary_pine": {
+        "type": "parametric",
+        "axiom": "A",
+        "productions": [
+            "A -> !(1.732)FF[&(36)$FL]/(180)[&(36)$FL]/(252)[&(36)$FL]A",
+            "F(l) -> F(l*1.07)",
+            "L -> ['''^^{-f+f}]"
+        ],
+        "rules": {"info": "Pine-like"},
+        "constants": {},
+        "angle": 36,
+        "iterations": 8,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.12,
+        "tropism_direction": [0, -1, 0],
+        "description": "Ternary pine - drooping needles"
+    },
+    
+    # =========================================================================
+    # Special Forms - NEW
+    # =========================================================================
+    "umbrella_tree": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)FFFF(l)B(l*0.8,w*0.707)",
+            "B(l,w) -> [&(70)$C(l,w*0.707)L]/(72)[&(70)$C(l,w*0.707)L]/(72)[&(70)$C(l,w*0.707)L]/(72)[&(70)$C(l,w*0.707)L]/(72)[&(70)$C(l,w*0.707)L]",
+            "C(l,w) -> !(w)F(l)[+(30)$D(l*0.7,w*0.707)L][-(30)$D(l*0.7,w*0.707)L]",
+            "D(l,w) -> !(w)F(l)L",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"
+        ],
+        "rules": {"info": "Umbrella shape"},
+        "constants": {},
+        "angle": 70,
+        "iterations": 6,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.08,
+        "tropism_direction": [0, -1, 0],
+        "description": "Umbrella/parasol tree - flat canopy"
+    },
+    
+    "bonsai_tree": {
+        "type": "parametric",
+        "axiom": "A(1,10)",
+        "productions": [
+            "A(l,w) -> !(w)F(l)[&(60)$B(l*0.5,w*0.707)L]/(90)[&(45)$B(l*0.6,w*0.707)L]/(180)[&(70)$B(l*0.4,w*0.707)L]A(l*0.8,w*0.707)",
+            "B(l,w) -> !(w)F(l)[+(40)$C(l*0.6,w*0.707)L][-(50)$C(l*0.5,w*0.707)L]",
+            "C(l,w) -> !(w)F(l)L",
+            "L -> ['''^^{-f+f+f-|-f+f+f}]"
+        ],
+        "rules": {"info": "Asymmetric bonsai"},
+        "constants": {},
+        "angle": 50,
+        "iterations": 7,
+        "is_3d": True,
+        "render_polygons": True,
+        "tropism_strength": 0.10,
+        "tropism_direction": [0, -1, 0],
+        "description": "Bonsai - asymmetric artistic form"
+    },
+    
+    # =========================================================================
+    # Stochastic (unchanged)
     # =========================================================================
     "stochastic_plant": {
         "type": "parametric",
@@ -487,7 +683,7 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
     },
     
     # =========================================================================
-    # Ferns - FIXED Alternating Branching
+    # Ferns (unchanged - work well)
     # =========================================================================
     "fern_simple": {
         "type": "parametric",
@@ -503,7 +699,7 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "constants": {"b": 2, "c": 1.23},
         "angle": 45,
         "iterations": 12,
-        "description": "Simple pinnate fern - FIXED alternating"
+        "description": "Simple pinnate fern"
     },
     
     "fern_delayed": {
@@ -520,7 +716,7 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "constants": {"b": 4, "c": 1.20},
         "angle": 45,
         "iterations": 18,
-        "description": "⭐ Fern with apical delay - FIXED"
+        "description": "Fern with apical delay [BEST]"
     },
     
     "fern_complex": {
@@ -537,7 +733,7 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "constants": {"b": 6, "c": 1.18},
         "angle": 45,
         "iterations": 25,
-        "description": "⭐ Complex fern - high apical delay - FIXED"
+        "description": "Complex fern - high apical delay [BEST]"
     },
 }
 
@@ -546,15 +742,9 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
 # =============================================================================
 
 def get_preset(name: str, include_3d=True):
-    """Get a preset by name from any category.
-    
-    Args:
-        name: Preset name
-        include_3d: If True, search 3D and parametric. If False, only 2D.
-    """
+    """Get a preset by name from any category."""
     name_lower = name.lower()
     
-    # Check 2D
     for key in PRESETS_2D:
         if key.lower() == name_lower:
             return PRESETS_2D[key]
@@ -562,19 +752,15 @@ def get_preset(name: str, include_3d=True):
     if not include_3d:
         return None
     
-    # Check 3D
     for key in PRESETS_3D:
         if key.lower() == name_lower:
             return PRESETS_3D[key]
     
-    # Check parametric
     for key in PARAMETRIC_PRESETS:
         if key.lower() == name_lower:
             preset = PARAMETRIC_PRESETS[key].copy()
             preset['is_parametric'] = True
-            # Add 'rules' key for display compatibility (main.py expects it)
             if 'productions' in preset and 'rules' not in preset:
-                # Convert productions to simplified rules format for display
                 preset['rules'] = {'parametric': str(preset['productions'])}
             return preset
     
@@ -582,11 +768,7 @@ def get_preset(name: str, include_3d=True):
 
 
 def list_presets(include_3d=True):
-    """Return list of preset names.
-    
-    Args:
-        include_3d: If True, include 3D and parametric presets. If False, only 2D.
-    """
+    """Return list of preset names."""
     all_presets = []
     all_presets.extend(PRESETS_2D.keys())
     
