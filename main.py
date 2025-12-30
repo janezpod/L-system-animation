@@ -444,6 +444,15 @@ Available parametric presets: """ + ", ".join(list_parametric_presets())
         if args.stochastic == 0 and 'stochastic' in preset:
             stochastic = preset['stochastic']
         
+        # Get render_polygons from preset (if user didn't specify --render-polygons)
+        if not args.render_polygons and preset.get('render_polygons', False):
+            render_polygons = True
+        
+        # Get growth mode from preset (only if user didn't specify on CLI)
+        growth_mode_preset = None
+        if 'growth_mode' in preset:
+            growth_mode_preset = preset['growth_mode']
+        
         print(f"Using preset: {args.preset}")
         if preset.get('description'):
             print(f"  Description: {preset['description']}")
@@ -478,6 +487,7 @@ Available parametric presets: """ + ", ".join(list_parametric_presets())
         roll_angle = args.roll_angle
         tropism_strength = args.tropism_strength
         tropism_direction_preset = None  # No preset direction for custom
+        growth_mode_preset = None  # No preset growth mode for custom
         print(f"Using custom L-system: {axiom} with rules {rules}")
         
         # Auto-detect 3D from rules
@@ -672,7 +682,11 @@ Available parametric presets: """ + ", ".join(list_parametric_presets())
         )
     
     # Setup animation controller
-    growth_mode = GrowthMode(args.growth_mode)
+    # Use growth_mode from preset if user didn't explicitly change from default ('sigmoid')
+    effective_growth_mode = args.growth_mode
+    if 'growth_mode_preset' in dir() and growth_mode_preset is not None and args.growth_mode == 'sigmoid':
+        effective_growth_mode = growth_mode_preset
+    growth_mode = GrowthMode(effective_growth_mode)
     controller = AnimationController(
         total_frames=args.frames,
         growth_mode=growth_mode
