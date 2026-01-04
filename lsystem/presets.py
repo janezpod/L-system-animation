@@ -106,19 +106,6 @@ PRESETS_2D: Dict[str, Dict[str, Any]] = {
     # =========================================================================
     # 2D Ferns
     # =========================================================================
-    "fern_fractal": {
-        "axiom": "X",
-        "rules": {
-            "X": "F+[[X]-X]-F[-FX]+X",
-            "F": "FF"
-        },
-        "angle": 25,
-        "iterations": 7,
-        "base_width": 1.0,
-        "growth_mode": "sigmoid",
-        "description": "Fractal fern pattern"
-    },
-    
     # =========================================================================
     # 2D Fractals
     # =========================================================================
@@ -203,93 +190,6 @@ PRESETS_3D: Dict[str, Dict[str, Any]] = {
         "render_polygons": True,
         "growth_mode": "sigmoid",
         "description": "ABOP 1.26 - Flowering plant with petals"
-    },
-    
-    # =========================================================================
-    # 3D Trees - Fixed with Roll + Leaves
-    # =========================================================================
-    "tree_3d_simple": {
-        "axiom": "!(1)F(200)/(45)A",
-        "rules": {
-            "A": "!(1.732)F(50)[&(22)$FL]/(120)[&(22)$FL]/(120)[&(22)$FL]/(45)A",
-            "L": "['''&&&{-f+f+f-f+f+f}]",
-            "F": "FF"
-        },
-        "angle": 22.5,
-        "iterations": 6,
-        "is_3d": True,
-        "render_polygons": True,
-        "growth_mode": "sigmoid",
-        "description": "Simple whorled tree with leaves - FIXED 3D"
-    },
-    
-    "honda_tree": {
-        "axiom": "!(1)F(200)A",
-        "rules": {
-            "A": "!(0.707)F(50)[&(40)BL][/(137.5)&(40)BL][/(274)&(40)BL]/(137.5)A",
-            "B": "!(0.707)F(40)[+(25)CL][-(25)CL]",
-            "C": "!(0.707)F(30)L",
-            "L": "['''&&&{-f+f+f-f+f+f}]",
-            "F": "FF"
-        },
-        "angle": 30,
-        "iterations": 11,
-        "is_3d": True,
-        "render_polygons": True,
-        "growth_mode": "sigmoid",
-        "description": "Honda tree with terminal leaves - FIXED 3D"
-    },
-    
-    "tree_3d_birch": {
-        "axiom": "!(1)F(300)A",
-        "rules": {
-            "A": "T(0.05)!(0.9)F(50)[T(0.20)&(35)$BL][T(0.20)^(25)$CL]/(137.5)A",
-            "B": "T(0.25)!(0.8)F(40)[&(30)$BL][^(20)$CL]/(137.5)B",
-            "C": "T(0.25)!(0.8)F(40)[&(25)$CL][^(25)$BL]/(137.5)C",
-            "L": "['''&&&{-f+f}]",
-            "F": "FF"
-        },
-        "angle": 30,
-        "iterations": 5,
-        "is_3d": True,
-        "render_polygons": True,
-        "tropism_strength": 0.18,
-        "tropism_direction": [0, -1, 0],
-        "growth_mode": "sigmoid",
-        "description": "Birch with gradient tropism - graceful droop"
-    },
-    
-    "tree_3d_maple": {
-        "axiom": "!(1)F(200)X",
-        "rules": {
-            "X": "!(0.9)F(50)[&(30)BL]/(180)[&(30)BL]/(137.5)FX",
-            "B": "!(0.8)F(40)[+(20)CL][-(20)CL]",
-            "C": "!(0.7)F(30)L",
-            "L": "['''&&&{-f+f+f}]",
-            "F": "FF"
-        },
-        "angle": 30,
-        "iterations": 6,
-        "is_3d": True,
-        "render_polygons": True,
-        "growth_mode": "sigmoid",
-        "description": "Maple tree with balanced branching"
-    },
-    
-    "bush_3d_with_leaves": {
-        "axiom": "A",
-        "rules": {
-            "A": "[&(30)$FL]/(120)[&(30)$FL]/(120)[&(30)$FL]/(45)FA",
-            "F": "S///F",
-            "S": "F",
-            "L": "['''^^{-f+f+f-|-f+f+f}]"
-        },
-        "angle": 25,
-        "iterations": 7,
-        "is_3d": True,
-        "render_polygons": True,
-        "growth_mode": "sigmoid",
-        "description": "3D bush with polygon leaves"
     },
     
     # =========================================================================
@@ -584,24 +484,6 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "is_3d": True,
         "growth_mode": "sigmoid",
         "description": "ABOP Fig 2.6 - Monopodial (FIXED 3D with roll) [BEST]"
-    },
-    
-    "sympodial_tree": {
-        "type": "parametric",
-        "axiom": "!(1)F(200)A(1,10)",
-        "productions": [
-            "A(l,w) -> !(w)F(l)[&(10)$B(l*0.9,w*0.707)]/(180)[&(60)$B(l*0.7,w*0.707)]",
-            "B(l,w) -> !(w)F(l)[+(10)$B(l*0.9,w*0.707)][-(60)$B(l*0.7,w*0.707)]"
-        ],
-        "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {},
-        "angle": 35,
-        "iterations": 10,
-        "tropism_strength": 0.12,
-        "tropism_direction": [0, -1, 0],
-        "is_3d": True,
-        "growth_mode": "sigmoid",
-        "description": "ABOP Fig 2.7 - Sympodial (FIXED z-growth) [BEST]"
     },
     
     "ternary_tree": {
@@ -901,25 +783,6 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
     # CREATIVE STYLIZED PLANTS - Visually Interesting
     # =========================================================================
     
-    # --- SPIRAL SUCCULENT ---
-    # Tight spiral rosette like an aloe or agave
-    "spiral_succulent": {
-        "type": "parametric",
-        "axiom": "A(1,8)",
-        "productions": [
-            # Each level: short stem + leaf, rotate by golden angle, continue smaller
-            "A(l,w) -> !(w)F(l*0.1)[''''''''&(70){-f(0.015)+f(0.015)+f(0.015)-|-f(0.015)+f(0.015)+f(0.015)}]/(137.5)A(l*0.97,w*0.95)"
-        ],
-        "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {},
-        "angle": 22.5,
-        "iterations": 40,
-        "is_3d": True,
-        "render_polygons": True,
-        "growth_mode": "linear",
-        "description": "Spiral succulent rosette - golden angle phyllotaxis"
-    },
-    
     # --- UMBRELLA TREE ---
     # Flat spreading canopy like an acacia
     "umbrella_tree": {
@@ -1065,44 +928,6 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "description": "Vine spiral - climbing spiral with leaves"
     },
     
-    # --- DANDELION PUFF ---
-    # Spherical seed head
-    "dandelion_puff": {
-        "type": "parametric",
-        "axiom": "!(6)F(0.8)A(0.3,4)",
-        "productions": [
-            # Radiating seeds in all directions using golden angle
-            "A(l,w) -> [&(20)''''''''{-f(0.005)+f(0.005)-|-f(0.005)+f(0.005)}]/(137.5)[&(40)''''''''{-f(0.005)+f(0.005)-|-f(0.005)+f(0.005)}]/(137.5)[&(60)''''''''{-f(0.005)+f(0.005)-|-f(0.005)+f(0.005)}]/(137.5)[&(80)''''''''{-f(0.005)+f(0.005)-|-f(0.005)+f(0.005)}]/(137.5)^(5)A(l*0.95,w)"
-        ],
-        "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {},
-        "angle": 22.5,
-        "iterations": 15,
-        "is_3d": True,
-        "render_polygons": True,
-        "growth_mode": "apical",
-        "description": "Dandelion puff - spherical seed head"
-    },
-    
-    # --- MUSHROOM CAP ---
-    # Umbrella-shaped mushroom
-    "mushroom_cap": {
-        "type": "parametric",
-        "axiom": "!(10)F(0.6)A(0.5,8)",
-        "productions": [
-            # Radiating gills under cap
-            "A(l,w) -> [&(95)''''''F(l*0.4)]/(20)[&(92)''''''F(l*0.45)]/(20)[&(88)''''''F(l*0.5)]/(20)[&(85)''''''F(l*0.52)]/(20)[&(82)''''''F(l*0.53)]/(20)[&(80)''''''F(l*0.54)]/(20)[&(78)''''''F(l*0.53)]/(20)[&(76)''''''F(l*0.52)]/(20)[&(75)''''''F(l*0.5)]/(20)[&(76)''''''F(l*0.48)]/(20)[&(78)''''''F(l*0.45)]/(20)[&(80)''''''F(l*0.42)]/(20)[&(83)''''''F(l*0.38)]/(20)[&(87)''''''F(l*0.33)]/(20)[&(92)''''''F(l*0.27)]/(20)[&(97)''''''F(l*0.2)]/(20)[&(100)''''''F(l*0.12)]/(20)[&(95)''''''F(l*0.4)]"
-        ],
-        "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {},
-        "angle": 22.5,
-        "iterations": 2,
-        "is_3d": True,
-        "render_polygons": False,
-        "growth_mode": "sigmoid",
-        "description": "Mushroom cap - umbrella dome with gills"
-    },
-    
     # --- FERN UNFURL ---
     # Fern frond with curled tip (fiddlehead)
     "fern_unfurl": {
@@ -1163,25 +988,6 @@ PARAMETRIC_PRESETS: Dict[str, Dict[str, Any]] = {
         "render_polygons": True,
         "growth_mode": "sigmoid",
         "description": "Weeping canopy - dense drooping willow style"
-    },
-    
-    # --- SPIKY AGAVE ---
-    # Thick pointed leaves in rosette
-    "spiky_agave": {
-        "type": "parametric",
-        "axiom": "A(1,10)",
-        "productions": [
-            # Thick pointed triangular leaves spiraling up
-            "A(l,w) -> !(w*0.3)F(l*0.05)[''''''''&(75){-f(0.008)+f(0.025)+f(0.025)+f(0.008)-|-f(0.008)+f(0.008)}]/(137.5)A(l*0.98,w*0.97)"
-        ],
-        "rules": {"info": "Parametric - see 'productions'"},
-        "constants": {},
-        "angle": 30,
-        "iterations": 25,
-        "is_3d": True,
-        "render_polygons": True,
-        "growth_mode": "linear",
-        "description": "Spiky agave - thick pointed rosette leaves"
     },
     
     # =========================================================================
@@ -1592,5 +1398,4 @@ def list_presets_by_category():
     return {k: sorted(v) for k, v in sorted(categories.items())}
 
 
-# Compatibility - for code that expects PRESETS dict
 PRESETS = {**PRESETS_2D, **PRESETS_3D}
