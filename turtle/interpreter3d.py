@@ -141,7 +141,7 @@ class Segment3D:
     
     def to_2d_segment(self) -> 'Segment':
         """Convert to 2D segment (XY projection)."""
-        from turtle.interpreter import Segment
+        from interpreter import Segment
         return Segment(
             self.x1, self.y1, self.x2, self.y2,
             self.depth, self.width, self.index, self.color_index
@@ -296,13 +296,13 @@ class TurtleState3D:
             gravity = np.array(gravity)
             # L should be orthogonal to H
             # Project L onto the horizontal plane (perpendicular to gravity)
-            # New L = H Ã— gravity (normalized)
+            # New L = H Ãƒâ€” gravity (normalized)
             new_L = np.cross(self.H, -gravity)
             if np.linalg.norm(new_L) > 1e-6:
                 self.L = new_L / np.linalg.norm(new_L)
                 self.U = np.cross(self.H, self.L)
         else:
-            # H Ã— gravity
+            # H Ãƒâ€” gravity
             new_L = _cross_py(self.H, [-g for g in gravity])
             length = math.sqrt(sum(x*x for x in new_L))
             if length > 1e-6:
@@ -349,7 +349,7 @@ def apply_tropism(heading, tropism_vector, elasticity: float = 0.2):
     """
     Bend heading toward tropism direction.
     
-    Uses the ABOP torque formula: Î± = e|H Ã— T|
+    Uses the ABOP torque formula: ÃŽÂ± = e|H Ãƒâ€” T|
     
     Args:
         heading: Current heading vector
@@ -360,7 +360,7 @@ def apply_tropism(heading, tropism_vector, elasticity: float = 0.2):
         New heading vector bent toward tropism
     """
     if HAS_NUMPY:
-        # H' = normalize(H + e * (T - (TÂ·H)H))
+        # H' = normalize(H + e * (T - (TÃ‚Â·H)H))
         dot = np.dot(tropism_vector, heading)
         bent = heading + elasticity * (tropism_vector - dot * heading)
         return bent / np.linalg.norm(bent)
@@ -395,7 +395,7 @@ class TurtleInterpreter3D:
     - ^: Pitch up
     - /: Roll right
     - \\: Roll left
-    - |: Turn around (180Â°)
+    - |: Turn around (180Ã‚Â°)
     
     Stack operations:
     - [: Push state (start branch)
@@ -441,8 +441,8 @@ class TurtleInterpreter3D:
             width_decrement: Multiplier for ! symbol (explicit width control)
             tropism_vector: Direction of environmental stimulus
             tropism_strength: How strongly to bend toward tropism
-            angle_variance: Random variance in angles (0.1 = Â±10%)
-            length_variance: Random variance in length (0.1 = Â±10%)
+            angle_variance: Random variance in angles (0.1 = Ã‚Â±10%)
+            length_variance: Random variance in length (0.1 = Ã‚Â±10%)
             random_seed: Seed for reproducible randomness
         """
         self.angle_delta = angle_delta
@@ -511,13 +511,49 @@ class TurtleInterpreter3D:
         state.width = self.initial_width
         state.step_size = self.step_size
         
+        def extract_param(s: str, pos: int) -> Tuple[Optional[float], int]:
+            """
+            Extract a parameter value from parentheses at position pos.
+            Returns (value, new_position) or (None, pos) if no parameter.
+            """
+            if pos >= len(s) or s[pos] != '(':
+                return None, pos
+            
+            # Find closing parenthesis
+            end = pos + 1
+            depth = 1
+            while end < len(s) and depth > 0:
+                if s[end] == '(':
+                    depth += 1
+                elif s[end] == ')':
+                    depth -= 1
+                end += 1
+            
+            if depth != 0:
+                return None, pos
+            
+            # Extract the parameter string
+            param_str = s[pos + 1:end - 1].strip()
+            
+            # Handle simple numeric values
+            try:
+                value = float(param_str)
+                return value, end - 1  # Return position of closing paren
+            except ValueError:
+                return None, pos
+        
         i = 0
         while i < len(lsystem_string):
             char = lsystem_string[i]
             
             if char == 'F':
-                # Move forward and draw
-                step = self._vary_length(state.step_size)
+                # Move forward and draw - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    step = self._vary_length(param)
+                    i = new_i
+                else:
+                    step = self._vary_length(state.step_size)
                 
                 if HAS_NUMPY:
                     new_pos = state.position + step * state.H
@@ -553,8 +589,13 @@ class TurtleInterpreter3D:
                     state.orthonormalize()
                 
             elif char == 'f' or char == 'G':
-                # Move forward without drawing
-                step = self._vary_length(state.step_size)
+                # Move forward without drawing - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    step = self._vary_length(param)
+                    i = new_i
+                else:
+                    step = self._vary_length(state.step_size)
                 if HAS_NUMPY:
                     state.position = state.position + step * state.H
                 else:
@@ -568,28 +609,58 @@ class TurtleInterpreter3D:
                         state.polygon_vertices.append(tuple(state.position))
                 
             elif char == '+':
-                # Turn left (positive yaw)
-                state.rotate_yaw(self._vary_angle(self.angle_delta))
+                # Turn left (positive yaw) - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    state.rotate_yaw(self._vary_angle(param))
+                    i = new_i
+                else:
+                    state.rotate_yaw(self._vary_angle(self.angle_delta))
                 
             elif char == '-':
-                # Turn right (negative yaw)
-                state.rotate_yaw(self._vary_angle(-self.angle_delta))
+                # Turn right (negative yaw) - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    state.rotate_yaw(self._vary_angle(-param))
+                    i = new_i
+                else:
+                    state.rotate_yaw(self._vary_angle(-self.angle_delta))
                 
             elif char == '&':
-                # Pitch down
-                state.rotate_pitch(self._vary_angle(-self.pitch_angle))
+                # Pitch down - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    state.rotate_pitch(self._vary_angle(-param))
+                    i = new_i
+                else:
+                    state.rotate_pitch(self._vary_angle(-self.pitch_angle))
                 
             elif char == '^':
-                # Pitch up
-                state.rotate_pitch(self._vary_angle(self.pitch_angle))
+                # Pitch up - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    state.rotate_pitch(self._vary_angle(param))
+                    i = new_i
+                else:
+                    state.rotate_pitch(self._vary_angle(self.pitch_angle))
                 
             elif char == '\\':
-                # Roll left
-                state.rotate_roll(self._vary_angle(-self.roll_angle))
+                # Roll left - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    state.rotate_roll(self._vary_angle(-param))
+                    i = new_i
+                else:
+                    state.rotate_roll(self._vary_angle(-self.roll_angle))
                 
             elif char == '/':
-                # Roll right
-                state.rotate_roll(self._vary_angle(self.roll_angle))
+                # Roll right - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    state.rotate_roll(self._vary_angle(param))
+                    i = new_i
+                else:
+                    state.rotate_roll(self._vary_angle(self.roll_angle))
                 
             elif char == '|':
                 # Turn around (180 degrees)
@@ -622,12 +693,27 @@ class TurtleInterpreter3D:
             
             # ABOP extension symbols
             elif char == '!':
-                # Decrement diameter
-                state.width *= self.width_decrement
+                # Set or decrement diameter - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    state.width = param
+                    i = new_i
+                else:
+                    state.width *= self.width_decrement
                 
             elif char == '$':
                 # Roll to horizontal
                 state.roll_to_horizontal()
+            
+            elif char == 'T':
+                # Set local tropism strength - check for parameter
+                param, new_i = extract_param(lsystem_string, i + 1)
+                if param is not None:
+                    # Apply tropism with specified strength
+                    if self.tropism_vector is not None:
+                        state.H = apply_tropism(state.H, self.tropism_vector, param)
+                        state.orthonormalize()
+                    i = new_i
                 
             elif char == "'":
                 # Increment color index
